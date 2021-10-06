@@ -9,8 +9,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Formação de preço de venda"/>
   <Description DefaultValue="Formação de preço de venda."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+  <IconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-80.png"/>
   <SupportUrl DefaultValue="https://www.tecno-it.com.br/"/>
   <AppDomains>
     <AppDomain>tecno-it.com.br</AppDomain>
@@ -87,13 +87,13 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Functions.Script.Url" DefaultValue="https://localhost:3000/src/functions/functions.js"/>
-        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://localhost:3000/src/functions/functions.json"/>
+        <bt:Url id="Functions.Script.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/functions/functions.js"/>
+        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/functions/functions.json"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
 
         <bt:Url id="Shared.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/taskpane/taskpane.html"/>

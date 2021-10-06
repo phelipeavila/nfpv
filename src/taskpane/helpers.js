@@ -923,7 +923,7 @@ async function copiarPlanilhaSV(){
 
         await context.sync();
     
-        console.log("ID: " + sampleSheet.id );//+ "' was copied to '" + copiedSheet.name + "'");
+        console.log("ID: " + precificacao.id );//+ "' was copied to '" + copiedSheet.name + "'");
     });
 }
 
