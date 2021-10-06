@@ -897,7 +897,7 @@ async function copiarPlanilhaSV(){
         let myWorkbook = context.workbook;
         let sampleSheet = myWorkbook.worksheets.getItem("{A7441363-1A72-4ACD-854A-C140198E488F}"); //planilha SV
         let precificacao = myWorkbook.worksheets.getItem("{5B74A0A4-C313-D74D-B6C9-894790A73C89}"); //planilha Precificação
-        let copiedSheet = sampleSheet.copy("End");
+        let copiedSheet = sampleSheet.copy("Beginning");
     
         sampleSheet.load("name");
         copiedSheet.load("name");
@@ -923,7 +923,7 @@ async function copiarPlanilhaSV(){
 
         await context.sync();
     
-        console.log("ID: " + precificacao.id );//+ "' was copied to '" + copiedSheet.name + "'");
+        console.log("ID: " + copiedSheet.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
     });
 }
 
