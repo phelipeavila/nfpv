@@ -1,0 +1,92 @@
+{
+    "functions": [
+        {
+            "description": "Get value for key",
+            "id": "MARKUP",
+            "name": "MARKUP",
+            "parameters": [
+                {
+                    "description": "Número da linha do item",
+                    "name": "num_linha",
+                    "type": "any"
+                },
+                {
+                    "description": "Variável aliq",
+                    "name": "aliq",
+                    "type": "any"
+                }
+
+            ],
+            "result": {}
+        },
+        {
+            "description": "Get value for key",
+            "id": "GETVALUEFORKEYCF",
+            "name": "GETVALUEFORKEYCF",
+            "parameters": [
+                {
+                    "description": "The key",
+                    "name": "key",
+                    "type": "any"
+                }
+            ],
+            "result": {}
+        },
+        {
+            "description": "Valor por extenso",
+            "id": "POREXTENSO",
+            "name": "POREXTENSO",
+            "parameters": [
+                {
+                    "description": "Valor em Reais e Centavos",
+                    "name": "valor",
+                    "type": "any"
+                }
+            ],
+            "result": {}
+        },
+        {
+            "description": "Cotação da moeda solecionada",
+            "id": "PTAX",
+            "name": "PTAX",
+            "parameters": [
+                {
+                    "description": "Moeda [USD/EUR/BRL]",
+                    "name": "moeda",
+                    "type": "any"
+                }
+            ],
+            "result": {}
+        },
+        {
+            "description": "Alíquota da soma de impostos",
+            "id": "IMPOSTOS",
+            "name": "IMPOSTOS",
+            "parameters": [
+                {
+                    "description": "Classificação [HW/SW/SV]",
+                    "name": "classificação",
+                    "type": "any"
+                }
+            ],
+            "result": {}
+        },
+        {
+            "description": "Get value for key",
+            "id": "SETVALUEFORKEYCF",
+            "name": "SETVALUEFORKEYCF",
+            "parameters": [
+                {
+                    "description": "The key",
+                    "name": "key",
+                    "type": "any"
+                },
+                {
+                    "name": "value",
+                    "type": "any"
+                }
+            ],
+            "result": {}
+        }
+    ]
+}
