@@ -129,7 +129,9 @@ function icmsDaTabela(origem = p.state.ufOrig, destino = p.state.ufDest){
 
 function calcICMS(tipoItem, eImportado = false, subTrib = false, anexoIX = false){
     if (p.state.zerarICMS) return 0;
-    if (subTrib) return 0;
+    if (subTrib){
+        console.log(`subtrib: ${subTrib}`)
+        return 0};
     if (tipoItem == 'SV' || tipoItem == 'SW' || tipoItem == '') return 0;
 
     if (eImportado && (p.state.ufOrig != p.state.ufDest)) {

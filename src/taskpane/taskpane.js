@@ -85,8 +85,12 @@ Office.initialize = () => {
     document.getElementById("checkGoiania").onchange = atualizaMargem;
     document.getElementById("checkICMS").onchange = atualizaMargem;
     document.getElementById("btn-login").onclick = hideFields;
-    document.getElementById("btnSV").onclick = copiarPlanilhaSV;
+    document.getElementById("btnSVadd").onclick = copiarPlanilhaSV;
     document.getElementById("btnContrib").onclick = calculaContribuicao;
+    document.getElementById("btnCronograma").onclick = cronograma;
+    document.getElementById("btnDI").onclick = copiaTabelaParaDI;
+    document.getElementById("input-list-planilha-sv").onkeyup = planilhaSV;
+    //document.getElementById("input-list-planilha-br").onkeyup = planilhaBR;
 
     
 
@@ -138,7 +142,18 @@ async function comeceAqui() {
     //atualizar campos de margem no frontend
     //await buscaMargem();
     carregaListaUF()
-    
+
+    await Excel.run(async (context) => {
+      var workbook = context.workbook;
+      workbook.load("protection/protected");
+  
+      return context.sync().then(function() {
+          if (!workbook.protection.protected) {
+              workbook.protection.protect("123");
+          }
+      });
+      
+    });    
     //document.getElementById("perm-all-other-fields").hidden = true;
     //atualiza array com informações das tabelas
     //await atualizaArrayTabelas();
@@ -363,7 +378,17 @@ async function atualizaParametros() {
     p.state.dolarPTAX     = range.m_values[19];
     p.state.euroPTAX      = range.m_values[20];
 
+    
+    range = ws.getRange("V3:V12").load("values");
     await context.sync();
+
+    var a = range.values;
+        
+    for (i in a){
+        if (a[i] != ''){
+            id.servicos.push(a[i][0]);
+        }
+    }
 
     atualizaDivPTAX();
     buscaMargem();
@@ -534,4 +559,11 @@ async function hideFields() {
 
 
 
+}
+
+
+function planilhaSV(){
+  const inputSV = document.getElementById("input-list-planilha-sv");
+
+  console.log(inputSV.value);
 }

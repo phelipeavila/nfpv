@@ -24,7 +24,7 @@
     </Sets>
   </Requirements>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://phelipeavila.github.io/nfpv/src/taskpane/taskpane.html"/>
+    <SourceLocation DefaultValue="https://localhost:3000/src/taskpane/taskpane.html"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
@@ -92,11 +92,11 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Functions.Script.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/functions/functions.js"/>
-        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/functions/functions.json"/>
+        <bt:Url id="Functions.Script.Url" DefaultValue="https://localhost:3000/src/functions/functions.js"/>
+        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://localhost:3000/src/functions/functions.json"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
 
-        <bt:Url id="Shared.Url" DefaultValue="https://phelipeavila.github.io/nfpv/src/taskpane/taskpane.html"/>
+        <bt:Url id="Shared.Url" DefaultValue="https://localhost:3000/src/taskpane/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="Functions.Namespace" DefaultValue="TIT"/>

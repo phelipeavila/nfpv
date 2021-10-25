@@ -384,6 +384,9 @@ async function atualizaArrayTabelas() {
     
 
     var infoTabela = { "index":0 , "num_linhas":0 , "linha_ini":0 , "linha_fin":0 };
+    var estaNoKit = false;
+    var numLinhasKit = 0;
+    var indexKit = 0;
 
     //varre da primeira até a ultima linha da última coluna
     for(let i = 0; i < ultimaCelula.linha; i++){
@@ -394,21 +397,50 @@ async function atualizaArrayTabelas() {
 
             numTabelas ++;
             tabelas.push({});
+            tabelas[numTabelas -1].kit = {};
             tabelas[numTabelas -1].index = numTabelas;
             tabelas[numTabelas -1].linha_ini = i + 1;
             tabelas[numTabelas -1].num_linhas = 0;         
+            indexKit = 0;
 
         } 
         //conta as células internas (com itens) da tabela
-        if (! celula.style.includes("Normal")){
+        if (!celula.style.includes("Normal") & celula.format.fill.color == "#D9D9D9" & !estaNoKit){
             //console.log(celula.address);
             //console.log(celula.style);
             tabelas[numTabelas -1 ].num_linhas ++;
             tabelas[numTabelas -1 ].linha_fin = i + 2;
+            tabelas[numTabelas -1 ].kit[indexKit] = {linha: i, subitens: 0};
+            estaNoKit = true;
+
         }
+
+        if (!celula.style.includes("Normal") & celula.format.fill.color == "#D9D9D9" & estaNoKit){
+            //console.log(celula.address);
+            //console.log(celula.style);
+            tabelas[numTabelas -1 ].num_linhas ++;
+            tabelas[numTabelas -1 ].linha_fin = i + 2;
+            tabelas[numTabelas -1 ].kit[indexKit].subitens ++;
+
+            //se a próxima célula não faz parte do kit, incrementa o index
+            if(propriedades[i + 1][0].format.fill.color != "#D9D9D9"){
+                indexKit ++;
+            }
+        }
+        
+        if (!celula.style.includes("Normal") & celula.format.fill.color != "#D9D9D9"){
+            //console.log(celula.address);
+            //console.log(celula.style);
+            tabelas[numTabelas -1 ].num_linhas ++;
+            tabelas[numTabelas -1 ].linha_fin = i + 2;
+            estaNoKit = false;
+            
+        }
+
     }
 
-    return ultimaCelula; 
+
+    return tabelas; 
 }
 
 
@@ -893,11 +925,25 @@ async function calculaContribuicao(){
 
 async function copiarPlanilhaSV(){
 
+    if(id.servicos.length > 10){
+        console.log(`Não é possível adicionar mais que 10 planilhas de serviço`)
+        return -1
+    }
+
     await Excel.run(async (context) => {
-        let myWorkbook = context.workbook;
-        let sampleSheet = myWorkbook.worksheets.getItem("{A7441363-1A72-4ACD-854A-C140198E488F}"); //planilha SV
-        let precificacao = myWorkbook.worksheets.getItem("{5B74A0A4-C313-D74D-B6C9-894790A73C89}"); //planilha Precificação
-        let copiedSheet = sampleSheet.copy("Beginning");
+       
+        var workbook = context.workbook;
+        workbook.load("protection/protected");
+
+        await context.sync();
+        
+        if (workbook.protection.protected) {
+            workbook.protection.unprotect("123");
+        }
+
+        let sampleSheet = workbook.worksheets.getItem(id.servicos[0]); 
+        let precificacao = workbook.worksheets.getItem(id.precificacao); 
+        let copiedSheet = sampleSheet.copy(Excel.WorksheetPositionType.after, precificacao);
     
         sampleSheet.load("name");
         copiedSheet.load("name");
@@ -905,7 +951,8 @@ async function copiarPlanilhaSV(){
         precificacao.load("position");
         sampleSheet.load("id");
         
-        
+        copiedSheet.visibility = Excel.SheetVisibility.visible;
+
         await context.sync();
         copiedSheet.position = precificacao.position + 1;
         copiedSheet.visibility = Excel.SheetVisibility.visible;
@@ -920,11 +967,411 @@ async function copiarPlanilhaSV(){
                 i = i + 1;
             }
         }
-
+        copiedSheet.activate();
+        workbook.protection.protect("123")
+        copiedSheet.load("id")
         await context.sync();
+        id.servicos.push(copiedSheet.id);
+
+        context.workbook.worksheets.getItem(id.param).getRange("V"+ (id.servicos.length + 1) +":"+"V"+(id.servicos.length + 1)).values = copiedSheet.id;
     
         console.log("ID: " + copiedSheet.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
     });
+}
+
+async function cronograma(){
+    await atualizaArrayTabelas();
+
+    var coluna_ini = colunas[0].ini;
+    var coluna_fin = colunas[0].qtde;
+    var headKit = [];
+    var numLinhasValidas = tabelas[tabelas.length - 1].linha_fin - tabelas[0].linha_ini - 2 //array com o número de linhas válidas
+    
+    return await Excel.run(async (context)=>{
+        context.workbook.protection.unprotect("123");
+        const precificacao = context.workbook.worksheets.getItem("{5B74A0A4-C313-D74D-B6C9-894790A73C89}"); //planilha Precificação
+        const cronograma = context.workbook.worksheets.getItem("{4360F843-007A-4860-8658-B6E2AA8612CD}");  //planilha CRONOGRAMA
+        cronograma.load("visibility");
+        await context.sync();
+
+        var linhaCronograma = cronograma.getRange("3:500");
+        var arrayFormulaItem = [["NA","NA","NA","NA","NA","NA","NA","NA","NA"]];
+        var range = "";
+
+        //se a planilha já estiver criada, ao pressionar o botão ela será escondida
+        if (cronograma.visibility == Excel.SheetVisibility.visible){
+            cronograma.visibility = Excel.SheetVisibility.veryHidden;
+            context.workbook.protection.protect("123")
+            return context.sync();
+        }
+
+        linhaCronograma.clear();
+        cronograma.visibility = Excel.SheetVisibility.visible;
+        await context.sync();
+
+
+        //seleciona as linhas de B até H de todas as linhas com conteúdo
+        var origem = precificacao.getRange(
+                coluna_ini + (tabelas[0].linha_ini + 2) + ":" +coluna_fin + tabelas[tabelas.length-1].linha_fin);
+        
+        var offset = (tabelas[0].linha_ini + 2) - 3; //linha original - linha destino
+
+        //copia para a planilha CRONOGRAMA, célula B3
+        cronograma.getRange("B3").copyFrom(origem);
+
+        range = "J:J"
+        linhaCronograma = cronograma.getRange(range);
+        linhaCronograma.numberFormat = "dd/mm/yyyy"
+
+        range = "L:N"
+        linhaCronograma = cronograma.getRange(range);
+        linhaCronograma.numberFormat = "dd/mm/yyyy"
+
+        range = "P:P"
+        linhaCronograma = cronograma.getRange(range);
+        linhaCronograma.numberFormat = "dd/mm/yyyy"
+
+        range = "Q:Q"
+        linhaCronograma = cronograma.getRange(range);
+        linhaCronograma.style = "Currency"
+
+        //escreve as fórmulas dos cronogramas, considerando que não há kits
+        for(let i = 3; i < numLinhasValidas + 3; i++){
+            range = "I" + (parseInt(i)) + ":" + "Q" + (parseInt(i));
+                            //     I    J    K 
+            arrayFormulaItem =  [["","","",
+                                        `=IF(OR(J${i}="",K${i}=""),"",J${i}+K${i})`, //L
+                                        "","","", //M N O
+                                        `=if(M${i}=0,"",M${i}+O${i})`, //P
+                                        ""]];  //Q
+            linhaCronograma = cronograma.getRange(range);
+            linhaCronograma.formulas = arrayFormulaItem;
+            
+            linhaCronograma.format.borders.getItem('EdgeBottom').color = "#000000";
+            linhaCronograma.format.borders.getItem('EdgeRight').color = "#000000";
+            linhaCronograma.format.borders.getItem('EdgeLeft').color = "#000000";
+            linhaCronograma.format.borders.getItem('EdgeTop').color = "#000000";
+            //linhaCronograma.format.borders.getItem('InsideHorizontal').color = "#F2F2F2";
+            linhaCronograma.format.borders.getItem('InsideVertical').color = "#000000";
+            
+            range = "O" + (parseInt(i)) + ":" + "O" + (parseInt(i));
+            linhaCronograma = cronograma.getRange(range);
+            linhaCronograma.format.fill.color = "#FCE4D6"
+
+            range = "Q" + (parseInt(i)) + ":" + "Q" + (parseInt(i));
+            linhaCronograma = cronograma.getRange(range);
+            linhaCronograma.format.fill.color = "#FCE4D6"
+
+        }
+        await context.sync();
+
+        //corrige as fórmulas dos cabeçalhos dos kits, se houver
+        // 
+        //verifica cabeçalhos de kits
+        for (i in tabelas){
+            for (j in tabelas[i].kit){
+                headKit.push(tabelas[i].kit[j]);
+            }
+        }
+
+        if (headKit.length > 0){
+
+          for (i in headKit){
+            //cabeçalho
+            range = "I" + (parseInt(headKit[i].linha - offset)) + ":" + "Q" + (parseInt(headKit[i].linha - offset));
+            
+            arrayFormulaItem =  [["NA","NA","NA",
+                                `=MAX(L${headKit[i].linha - offset}:L${headKit[i].linha - offset + headKit[i].subitens})`, //L
+                                `=MAX(M${headKit[i].linha - offset}:M${headKit[i].linha - offset + headKit[i].subitens})`,  //M
+                                "","", // N O
+                                `=iferror(M${i}+O${i},"")`, //P
+                                ""]];  //Q
+            linhaCronograma = cronograma.getRange(range);
+            linhaCronograma.formulas = arrayFormulaItem;
+
+            //subitens
+            for (let j = 1; j <= headKit[i].subitens; j ++){
+                range = "I" + (parseInt(headKit[i].linha - offset + j)) + ":" + "Q" + (parseInt(headKit[i].linha - offset + j));
+            
+                arrayFormulaItem =  [["","","",  //i J K
+                                    `=IF(OR(J${(parseInt(headKit[i].linha - offset + j))}="",K${(parseInt(headKit[i].linha - offset + j))}=""),"",J${(parseInt(headKit[i].linha - offset + j))}+K${(parseInt(headKit[i].linha - offset + j))})`, //L
+                                    "", "",  //M N
+                                    "NA","NA","NA"]];  //O P Q 
+                linhaCronograma = cronograma.getRange(range);
+                linhaCronograma.format.borders.getItem('EdgeTop').color = "#F2F2F2";
+                if (j < headKit[i].subitens){
+                    linhaCronograma.format.borders.getItem('EdgeBottom').color = "#F2F2F2";
+                }
+
+                //console.log(range)
+                linhaCronograma.formulas = arrayFormulaItem;
+
+                //linhaCronograma.format.borders.getItem('EdgeBottom').color = "#000000";
+                //linhaCronograma.format.borders.getItem('EdgeRight').color = "#000000";
+                //linhaCronograma.format.borders.getItem('EdgeLeft').color = "#000000";
+                //linhaCronograma.format.borders.getItem('EdgeTop').color = "#F2F2F2";
+                //linhaCronograma.format.borders.getItem('InsideHorizontal').color = "#F2F2F2";
+                //linhaCronograma.format.borders.getItem('InsideVertical').color = "#F2F2F2";
+                
+                range = "I" + (parseInt(headKit[i].linha - offset + j)) + ":" + "K" + (parseInt(headKit[i].linha - offset + j));
+                linhaCronograma = cronograma.getRange(range);
+                linhaCronograma.format.fill.color = "#FCE4D6" //rosa
+
+                range = "M" + (parseInt(headKit[i].linha - offset + j)) + ":" + "N" + (parseInt(headKit[i].linha - offset + j));
+                linhaCronograma = cronograma.getRange(range);
+                linhaCronograma.format.fill.color = "#FCE4D6" //rosa
+
+                range = "L" + (parseInt(headKit[i].linha - offset + j)) + ":" + "L" + (parseInt(headKit[i].linha - offset + j));
+                linhaCronograma = cronograma.getRange(range);
+                linhaCronograma.format.fill.color = "#D9D9D9" //cinza
+
+                range = "O" + (parseInt(headKit[i].linha - offset + j)) + ":" + "Q" + (parseInt(headKit[i].linha - offset + j));
+                linhaCronograma = cronograma.getRange(range);
+                linhaCronograma.format.fill.color = "#D9D9D9" //cinza
+
+
+
+            }
+          }
+        }
+                
+        //remove as linhas em branco
+        for (i in tabelas){
+            cronograma.getRange((tabelas[tabelas.length - i -1].linha_fin - offset) + ":" + (tabelas[tabelas.length - i - 1].linha_fin - offset + 3)).delete(Excel.DeleteShiftDirection.up);
+        }
+
+        await context.sync();
+        cronograma.activate();
+        context.workbook.protection.protect("123")
+        await context.sync();
+        //console.log("ID: " + cronograma.name );
+
+    });
+
+}
+
+async function copiaTabelaParaDI(){
+    await atualizaArrayTabelas();
+    return await Excel.run(async (context)=>{
+        context.workbook.protection.unprotect("123");
+        const primeiraLinha = 21;
+        const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
+        const despesas = context.workbook.worksheets.getItem(id.despesas);
+        despesas.load("visibility");
+        await context.sync();
+
+        //se a planilha já estiver criada, ao pressionar o botão ela será escondida
+        if (despesas.visibility == Excel.SheetVisibility.visible){
+            despesas.visibility = Excel.SheetVisibility.veryHidden;
+            context.workbook.protection.protect("123")
+            return context.sync();
+        }
+        
+        despesas.visibility = Excel.SheetVisibility.visible;
+
+
+        var rangeTabelaOrigem = colunas[0].ini + tabelas[0].linha_ini + ":" + nextLetterInAlphabet(colunas[0].ini, 2) + tabelas[tabelas.length - 1].linha_fin;
+        var rangeTabelaOrigem = colunas[0].ini + tabelas[0].linha_ini + ":" + colunas[5].fin + tabelas[tabelas.length - 1].linha_fin;
+        var tabelaOrigem = precificacao.getRange(rangeTabelaOrigem).load("values");
+        var cabecalhos = [];
+       
+        context.workbook.protection.protect("123");
+
+        await context.sync()
+
+        tabelaOrigem = tabelaOrigem.values;
+
+        //filtra somente os cabecalhos e itens da tabela. Desconsidera os subitens
+        for ( i in tabelaOrigem){
+            if (/^([0-9]+.\s[0-9]+)$/.test(tabelaOrigem[i][0])){
+                cabecalhos.push(tabelaOrigem[i])
+            }
+        }
+
+        //copia itens para aba de despesas
+        for (i in cabecalhos){
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha)).values = cabecalhos[i][0];
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha)).values = cabecalhos[i][0];
+            despesas.getRange("E" + (parseInt(i) + primeiraLinha)).values = cabecalhos[i][1].toUpperCase();
+            despesas.getRange("C" + (parseInt(i) + primeiraLinha)).values = cabecalhos[i][2];
+            despesas.getRange("F" + (parseInt(i) + primeiraLinha)).values = 
+                            calculaImpostos(cabecalhos[i][1].toUpperCase(), simNaotoBoolean(cabecalhos[i][23]), simNaotoBoolean(cabecalhos[i][25]));
+            despesas.getRange("F" + (parseInt(i) + primeiraLinha)).numberFormat = "0.000%";
+            despesas.getRange("G" + (parseInt(i) + primeiraLinha)).formulas = `=D${(parseInt(i) + primeiraLinha)} * F${(parseInt(i) + primeiraLinha)}`
+
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha) + ":" + "G" + (parseInt(i) + primeiraLinha)).format.borders.getItem('EdgeBottom').color = "#000000";
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha) + ":" + "G" + (parseInt(i) + primeiraLinha)).format.borders.getItem('EdgeRight').color = "#000000";
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha) + ":" + "G" + (parseInt(i) + primeiraLinha)).format.borders.getItem('EdgeLeft').color = "#000000";
+            despesas.getRange("B" + (parseInt(i) + primeiraLinha) + ":" + "G" + (parseInt(i) + primeiraLinha)).format.borders.getItem('InsideVertical').color = "#000000";
+        }
+
+        //tabela resumo
+
+        //soma de impostos
+        despesas.getRange("D12").formulas = `=SUM(G${primeiraLinha}:G${primeiraLinha + cabecalhos.length - 1})`;
+        await context.sync();
+
+        await resumo()
+        despesas.activate();
+        await context.sync();
+        return cabecalhos;
+        
+    });
+}
+
+async function resumo(){
+    await atualizaArrayTabelas();
+    const colunaresumo = "D"
+    return await Excel.run(async (context)=>{
+        const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
+        const despesas = context.workbook.worksheets.getItem(id.despesas);
+        var range = "";
+
+        // VALOR DO FATURAMENTO
+        // CUSTOS DE AQUISIÇÃO EM REAIS
+        // CUSTOS DE IMPORTAÇÃO
+        despesas.getRange("D5").formulas = `=(subtotal(9, Precificação!${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}) - subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}))`;
+        if(id.servicos.length > 1){
+            // CUSTOS DIRETOS DE MÃO DE OBRA PRÓPRIA  
+            for (i in id.servicos){
+                console.log(i)
+                let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+                servico.load("name");
+                await context.sync();
+
+                console.log(servico.name)
+
+                if (i == 1){
+                    range = "='" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+                    //console.log(`range1: ${range}`)
+                }
+                if (i > 1){
+                    range = range + " + '" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+                    //console.log(`range1+: ${range}`)
+                }
+            }
+            despesas.getRange("D6").formulas = range;
+
+            // CUSTOS COM SUBCONTRATAÇÕES, LOCAÇÕES E DESPESAS DIVERSAS
+            for (i in id.servicos){
+                console.log(i)
+                let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+                servico.load("name");
+                await context.sync();
+
+                console.log(servico.name)
+
+                if (i == 1){
+                    range = "='" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+                    //console.log(`range1: ${range}`)
+                }
+                if (i > 1){
+                    range = range + " + '" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+                    //console.log(`range1+: ${range}`)
+                }
+            }
+            despesas.getRange("D7").formulas = range;
+
+            // CUSTOS COM LOGÍSTICA PARA EQUIPE DE ACOMPANHAMENTO 
+            for (i in id.servicos){
+                console.log(i)
+                let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+                servico.load("name");
+                await context.sync();
+
+                console.log(servico.name)
+
+                if (i == 1){
+                    range = "='" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+                    //console.log(`range1: ${range}`)
+                }
+                if (i > 1){
+                    range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+                    //console.log(`range1+: ${range}`)
+                }
+            }
+            despesas.getRange("D8").formulas = range;
+
+            // CUSTOS COM LOGÍSTICA PARA EQUIPE DE EXECUÇÃO 
+            for (i in id.servicos){
+                console.log(i)
+                let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+                servico.load("name");
+                await context.sync();
+
+                console.log(servico.name)
+
+                if (i == 1){
+                    range = "='" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+                    //console.log(`range1: ${range}`)
+                }
+                if (i > 1){
+                    range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+                    //console.log(`range1+: ${range}`)
+                }
+            }
+            despesas.getRange("D9").formulas = range;
+
+            // CUSTOS COM FRETES 
+            for (i in id.servicos){
+                console.log(i)
+                let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+                servico.load("name");
+                await context.sync();
+
+                console.log(servico.name)
+
+                if (i == 1){
+                    range = "='" + servico.name + "'" + "!SUBTOTAL_FRETES";
+                    //console.log(`range1: ${range}`)
+                }
+                if (i > 1){
+                    range = range + " + '" + servico.name + "'" + "!SUBTOTAL_FRETES";
+                    //console.log(`range1+: ${range}`)
+                }
+            }
+            despesas.getRange("D10").formulas = range;
+        }else{
+            range = 0
+            despesas.getRange("D6").formulas = range;
+            despesas.getRange("D7").formulas = range;
+            despesas.getRange("D8").formulas = range;
+            despesas.getRange("D9").formulas = range;
+            despesas.getRange("D10").formulas = range;
+        }
+        // COMISSÕES
+        despesas.getRange("E11").formulas = `${p.state.comCom + p.state.comDir + p.state.comPar + p.state.comPre}`;
+        // IMPOSTOS
+        //despesas.getRange("D12").formulas = ``;
+        // SERVIÇOS DE TERCEIROS
+        despesas.getRange("E13").formulas = `${p.state.svTerc}`;
+        // TAXA ADMINISTRATIVA
+        despesas.getRange("E14").formulas = `${p.state.txAdm}`;
+        // CRÉDITO ICMS
+        despesas.getRange("D15").formulas = ``;
+        // MARGEM LÍQUIDA
+        despesas.getRange("D16").formulas = ``;
+
+    });
+
+}
+
+function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
+
+    var icms = calcICMS(tipoItem, false, subTrib, anexoIX);
+    var difal = (p.state.ufOrig == p.state.ufDest ? 0: (icmsDaTabela(p.state.ufDest, p.state.ufDest) - icms) * !subTrib);
+
+    console.log(`icms: ${icms} -- difal: ${difal}`)
+
+    if (tipoItem == 'HW' || tipoItem == 'MAT'){
+        return trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal;
+    }else if (tipoItem == 'SW' || tipoItem == 'SV'){
+        return trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania);
+    }else{
+        //valida se o tipoItem está dentre os valores permitidos
+        console.log(`Erro: Valor inválido para tipoItem: ${tipoItem}`)
+        return -1;
+    }
 }
 
 
@@ -936,4 +1383,54 @@ function arred2 (value) {
 //recebe um número e retorna arredondado com 4 casas decimais
 function arred4 (value) {
     return (Math.round(value*10000)/10000)
+}
+
+function nextLetterInAlphabet(letter, index = 1 ) {
+    if (letter == "z") {
+      return "a";
+    } else if (letter == "Z") {
+      return "A";
+    } else {
+      return String.fromCharCode(letter.charCodeAt(0) + index);
+    }
+}
+
+
+//recebe uma string. Se a string estiber escrito SIM/sim, retorna true
+//se estiver vazia ou NÃO/não, retorna falso
+//Obs: não é case sensitive
+function simNaotoBoolean (input){
+    if(/^([s|S][i|I][m|M])$/.test(input)){
+        return true;
+    }else if (/^([n|N][a|ã|Ã|A][o|O])$/.test(input)){
+        return false;
+    }else if(input == ""){
+        return false;
+    }else{
+        console.log(`Erro em simNaotoBoolean() - input: "${input}"`)
+        return -1;
+    }
+}
+
+async function teste(){
+    return await Excel.run(async (context)=>{
+        //Excel.createWorkbook(context.workbook);
+        //context.workbook.save(Excel.SaveBehavior.prompt);
+        const plan = context.workbook.worksheets.getItem("DESPESAS-INDIRETAS")
+        plan.load("id");
+        await context.sync();
+
+        // var a = range.values;
+        
+        // for (i in a){
+        //     if (a[i] != ''){
+        //         id.servicos.push(a[i][0]);
+        //     }
+        // }
+        
+        //await context.sync()
+        console.log(plan.id);
+        //return range;
+    });
+
 }
