@@ -6,3 +6,4 @@ package-lock.json
 package.json
 webpack.config.js
 __manifest.xml.bak
+manifest_online.xml
