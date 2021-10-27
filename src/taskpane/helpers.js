@@ -925,6 +925,8 @@ async function calculaContribuicao(){
 
 async function copiarPlanilhaSV(){
 
+    const COLUNA_ID_SV = 'V'
+
     if(id.servicos.length > 10){
         console.log(`Não é possível adicionar mais que 10 planilhas de serviço`)
         return -1
@@ -957,25 +959,101 @@ async function copiarPlanilhaSV(){
         copiedSheet.position = precificacao.position + 1;
         copiedSheet.visibility = Excel.SheetVisibility.visible;
 
-        var i = 1;
-        while (i != -1){
-            try {
-                copiedSheet.name = "Serviços (" + i + ")";
-                await context.sync();
-                i = -1;
-            } catch  {
-                i = i + 1;
+        if (document.getElementById("input-list-planilha").value == '' ){
+            var i = 1;
+            while (i != -1){
+                try {
+                    copiedSheet.name = "Serviços (" + i + ")";
+                    await context.sync();
+                    i = -1;
+                } catch  {
+                    i = i + 1;
+                }
             }
+        }else{
+            copiedSheet.name = document.getElementById("input-list-planilha").value;
+            document.getElementById("input-list-planilha").value = "";
         }
+
         copiedSheet.activate();
         workbook.protection.protect("123")
         copiedSheet.load("id")
         await context.sync();
         id.servicos.push(copiedSheet.id);
 
-        context.workbook.worksheets.getItem(id.param).getRange("V"+ (id.servicos.length + 1) +":"+"V"+(id.servicos.length + 1)).values = copiedSheet.id;
+        context.workbook.worksheets.getItem(id.param).getRange(COLUNA_ID_SV+ (id.servicos.length + 1) +":"+COLUNA_ID_SV+(id.servicos.length + 1)).values = copiedSheet.id;
     
         console.log("ID: " + copiedSheet.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
+
+        await atualizaListaPlanilhas()
+    });
+}
+
+async function novaPlanilhaCustomizada(){
+
+    const COLUNA_ID_CUST = 'Y'
+
+    if(id.custom.length > 10){
+        console.log(`Não é possível adicionar mais que 10 planilhas customizadas`)
+        return -1
+    }
+
+    await Excel.run(async (context) => {
+       
+        var workbook = context.workbook;
+        workbook.load("protection/protected");
+
+        await context.sync();
+        
+        if (workbook.protection.protected) {
+            workbook.protection.unprotect("123");
+        }
+
+        let novaPlanilha = workbook.worksheets.add('Planilha')
+        //novaPlanilha.position = 0;
+        //let sampleSheet = workbook.worksheets.getItem(id.servicos[0]); 
+        //let precificacao = workbook.worksheets.getItem(id.precificacao); 
+        //let copiedSheet = sampleSheet.copy(Excel.WorksheetPositionType.after, precificacao);
+    
+        novaPlanilha.load("name");
+        //copiedSheet.load("name");
+
+        novaPlanilha.load("position");
+        novaPlanilha.load("id");
+        
+        novaPlanilha.visibility = Excel.SheetVisibility.visible;
+
+        await context.sync();
+        novaPlanilha.position = 0;
+        //copiedSheet.visibility = Excel.SheetVisibility.visible;
+
+        if (document.getElementById("input-list-planilha").value == '' ){
+            var i = 1;
+            while (i != -1){
+                try {
+                    novaPlanilha.name = "Planilha (" + i + ")";
+                    await context.sync();
+                    i = -1;
+                } catch  {
+                    i = i + 1;
+                }
+            }
+        }else{
+            novaPlanilha.name = document.getElementById("input-list-planilha").value;
+            document.getElementById("input-list-planilha").value = "";
+        }
+
+        novaPlanilha.activate();
+        workbook.protection.protect("123")
+        
+        await context.sync();
+        id.custom.push(novaPlanilha.id);
+
+        workbook.worksheets.getItem(id.param).getRange(COLUNA_ID_CUST+ (id.custom.length + 1) +":"+COLUNA_ID_CUST+(id.custom.length + 1)).values = novaPlanilha.id;
+    
+        console.log("ID: " + novaPlanilha.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
+
+        await atualizaListaPlanilhas()
     });
 }
 
@@ -1081,8 +1159,8 @@ async function cronograma(){
             range = "I" + (parseInt(headKit[i].linha - offset)) + ":" + "Q" + (parseInt(headKit[i].linha - offset));
             
             arrayFormulaItem =  [["NA","NA","NA",
-                                `=MAX(L${headKit[i].linha - offset}:L${headKit[i].linha - offset + headKit[i].subitens})`, //L
-                                `=MAX(M${headKit[i].linha - offset}:M${headKit[i].linha - offset + headKit[i].subitens})`,  //M
+                                `=MAX(L${headKit[i].linha - offset +1}:L${headKit[i].linha - offset + headKit[i].subitens})`, //L
+                                `=MAX(M${headKit[i].linha - offset +1}:M${headKit[i].linha - offset + headKit[i].subitens})`,  //M
                                 "","", // N O
                                 `=iferror(M${i}+O${i},"")`, //P
                                 ""]];  //Q
@@ -1416,21 +1494,197 @@ async function teste(){
     return await Excel.run(async (context)=>{
         //Excel.createWorkbook(context.workbook);
         //context.workbook.save(Excel.SaveBehavior.prompt);
-        const plan = context.workbook.worksheets.getItem("DESPESAS-INDIRETAS")
-        plan.load("id");
+        const plan = context.workbook.worksheets.getItem(id.param)
+        var range = plan.getRange("V2:V12")
+        range.load("values");
         await context.sync();
+        range = range.values;
 
-        // var a = range.values;
-        
-        // for (i in a){
-        //     if (a[i] != ''){
-        //         id.servicos.push(a[i][0]);
-        //     }
-        // }
-        
         //await context.sync()
-        console.log(plan.id);
-        //return range;
+        //console.log(plan.id);
+        return range;
     });
 
+}
+
+//recebe o nome da planilha a ser removida
+//remove do excel e do array id
+async function removePlanilhaSV(){
+    var nome = document.getElementById("input-list-planilha").value;
+    const COLUNA_ID_SV = 'V'
+    const COLUNA_ID_CUSTOM = 'Y'
+    
+    return await Excel.run(async (context)=>{
+        //verifica se a planilha existe
+        const workbook = context.workbook;
+        const plan = workbook.worksheets.getItem(nome)
+        workbook.load("protection/protected");
+
+        plan.load("id")
+        try {
+            await context.sync();    
+        } catch (error) {
+            console.log("planilha não existe")
+            return -1
+        }
+
+        //verifica se a planilha é de serviços
+        if (id.servicos.indexOf(plan.id) == -1 && id.custom.indexOf(plan.id) == -1){
+            console.log("Não é uma planilha de serviços/customizada")
+
+            return -1
+        }else if(plan.id == "{A7441363-1A72-4ACD-854A-C140198E488F}"){
+            console.log("Não é possível excluir a planilha modelo")
+            return -1
+        }
+
+        //remove do frontend
+        let lista = document.getElementById("datalist-planilha").options;
+        for (i in lista){
+            if (lista[i].value == nome){
+                lista[i].remove();
+            }
+        }
+
+
+        //remove ID do array
+        if (id.servicos.indexOf(plan.id) == -1){
+            id.custom.splice(id.custom.indexOf(plan.id), 1);
+
+            //remove todas as IDs das planilhas de serviço da aba param
+            //escreve os IDs do array de ID, que agora está atualizado
+            const param = workbook.worksheets.getItem(id.param);
+            let range = param.getRange(COLUNA_ID_CUSTOM+"2"+":"+COLUNA_ID_CUSTOM+"12");
+            range.load("values");
+            await context.sync();
+            for (i in range.values){
+                param.getRange(COLUNA_ID_CUSTOM+(2+parseInt(i))).values = ''
+                //range.values[i] = ['']
+            }
+
+            for (i in id.custom){
+                param.getRange(COLUNA_ID_CUSTOM+(2+parseInt(i))).values = id.custom[i]
+            }
+            await context.sync();
+        }else{
+            id.servicos.splice(id.servicos.indexOf(plan.id), 1);
+
+            //remove todas as IDs das planilhas de serviço da aba param
+            //escreve os IDs do array de ID, que agora está atualizado
+            const param = workbook.worksheets.getItem(id.param);
+            let range = param.getRange(COLUNA_ID_SV+"2"+":"+COLUNA_ID_SV+"12");
+            range.load("values");
+            await context.sync();
+            for (i in range.values){
+                param.getRange(COLUNA_ID_SV+(2+parseInt(i))).values = ''
+                //range.values[i] = ['']
+            }
+
+            for (i in id.servicos){
+                param.getRange(COLUNA_ID_SV+(2+parseInt(i))).values = id.servicos[i]
+            }
+            await context.sync();
+        }
+ 
+        //remove todas as IDs das planilhas de serviço da aba param
+        //escreve os IDs do array de ID, que agora está atualizado
+        const param = workbook.worksheets.getItem(id.param);
+        var range = param.getRange(COLUNA_ID_SV+"2"+":"+COLUNA_ID_SV+"12");
+        range.load("values");
+        await context.sync();
+        for (i in range.values){
+            param.getRange(COLUNA_ID_SV+(2+parseInt(i))).values = ''
+            //range.values[i] = ['']
+        }
+
+        for (i in id.servicos){
+            param.getRange(COLUNA_ID_SV+(2+parseInt(i))).values = id.servicos[i]
+        }
+        await context.sync();
+
+        //remove a planilha
+        if (workbook.protection.protected) {
+            workbook.protection.unprotect("123");
+        }
+        plan.delete()
+        workbook.protection.protect("123")
+        document.getElementById("input-list-planilha").value = '';
+        document.getElementById("btn-add-sheet-sv").disabled = false;
+        document.getElementById("btn-add-sheet-br").disabled = false;
+        document.getElementById("btn-rem-sheet-sv").disabled = true;
+    });
+}
+
+
+async function removeLinha(){
+    //verifica range selecionado
+    //verifica se é um range válido:
+    ///o range contem célula fora de tabela? Se sim, Não excluir e retornar
+    ///a seleção é somente a última linha (do subtotal)? Se sim, não excluir e retornar
+    ///a seleção é somente a segunda linha (item//tipo//descrição)? Se sim, não excluir e retornar
+    ///o range contém o cabeçalho de uma tabela? Se sim, expandir a seleção até o final 
+    ///o range contém o cabeçalho de um kit? Se sim, a última linha do range é maior que a última linha do kit? Se não, expandir até o final do kit
+    ///(validar se as fórmulas do cabeçalho do kit se ajustam sozinhas)
+    ///o range contém a última linha de algum kit? Se sim, ajustar a formatação 
+    ///seleciona a(s) linha(s) e exclui
+    //renumerar
+
+}
+
+async function moveParaDireita(){
+    const nome = document.getElementById("input-list-planilha").value;
+    if (nome == '' ){
+        return
+    }
+   
+    if(!existeNaLista(nome)){
+        return
+    }
+    return await Excel.run(async (context)=>{
+        const workbook = context.workbook;
+        workbook.load("protection/protected");
+        var plan = workbook.worksheets.getItem(nome);
+        plan.load("position");
+        await context.sync();
+
+        if (workbook.protection.protected) {
+            workbook.protection.unprotect("123");
+        }
+        console.log(plan.position)
+        //return plan.position;
+        plan.position = plan.position + 1;
+
+        workbook.protection.protect("123");
+        await context.sync();
+        console.log(plan.position)
+        return context.sync();
+        
+    });
+}
+
+async function moveParaEsquerda(){
+    const nome = document.getElementById("input-list-planilha").value;
+    if (nome == '' ){
+        return
+    }
+
+    if(!existeNaLista(nome)){
+        return
+    }
+    await Excel.run(async (context)=>{
+        const workbook = context.workbook;
+        workbook.load("protection/protected");
+        var plan = workbook.worksheets.getItem(nome);
+        plan.load("position");
+        await context.sync();
+
+        if (workbook.protection.protected) {
+            workbook.protection.unprotect("123");
+        }
+
+        plan.position = plan.position - 1;
+        
+        workbook.protection.protect("123");
+        return context.sync();
+    });
 }

@@ -30,13 +30,23 @@
   <body id="app-body-up" class="ms-font-m ms-welcome ms-Fabric">
     <header class="ms-welcome__header ms-bgColor-neutralLighter">
         <img height="70" src="../../assets/logo-filled-slogan.png" alt="tecno.it" title="tecno.it" />
-      
+
     </header>
     <section id="sideload-msg" class="ms-welcome__main">
-        <h2 class="ms-font-xl">Por favor, atualize a página.</h2>
+        <h2 class="ms-font-xl">Erro ao inicializar.<br> Por favor, recarregue o plug-in.</h2>
     </section>
     <!-- change display below to none -->
     <main id="app-body" class="ms-welcome__main " style="display: flex;"> 
+        <nav id="nav-bar">
+
+            <ul id="nav-ul">
+                <li id="li-edicao" class="nav-item"><a id="a-edicao" href="#">Edição</a></li>
+                <li id="li-cambio" class="nav-item"><a id="a-cambio" href="#" style="font-size: 0.8rem;">Câmbio e<br> Faturamento</a></li>
+                <li id="li-margens" class="nav-item"><a id="a-margens" href="#">Margens</a></li>
+                <!-- <li id="li-implantacao" class="nav-item"><a id="a-implantacao" href="#">Implantação</a></li> -->
+            </ul>
+            
+        </nav>
         <div id="div-margem-geral" class="ms-welcome__main ">
 
             <span id="perm-login">
@@ -50,26 +60,35 @@
             <span id="perm-all-other-fields">
                 <span id="perm-cambio">
                     <div class="div-cambio-1">
-                        <fieldset style="border-radius: 5px;">
-                            <legend >PTAX</legend>
-                            <div class="div-cambio-2">
-                                <input type="radio" name="radioCambio" id="radioCambioManual">
-                                <label for="inputUSD" id="labelInputUSD">USD</label>
-                                <input type="number" name="inputUSD" id="inputUSD" step="0.1">
-                                <label for="inputEUR" id="labelInputEUR">EUR</label>
-                                <input type="number" name="inputEUR" id="inputEUR" step="0.1">
-                            </div>
+
+                            <!-- <legend >PTAX</legend> -->
                             <div class="div-cambio-2">
                                 <input type="radio" name="radioCambio" id="radioCambioData">
-                                <label for="inputDate" id="labelInputDate">Cotação do dia </label>
+                                <label for="inputDate" id="labelInputDate">Cotação na data: </label>
                                 <input type="date" id="inputDate">
                                 <!-- <button id="btnUpdateCambio"><img src="../../assets/atualizar.png" alt=""></button> -->
                             </div>
-                        </fieldset>
+                            <div class="div-cambio-2">
+                                <input type="radio" name="radioCambio" id="radioCambioManual" title="Selecione uma data">
+                                <label for="inputUSD" id="labelInputUSD">USD</label>
+                                <input type="number" name="inputUSD" id="inputUSD" step="0.1" title="Câmbio em uso na FPV">
+                                <label for="inputEUR" id="labelInputEUR">EUR</label>
+                                <input type="number" name="inputEUR" id="inputEUR" step="0.1" title="Câmbio em uso na FPV">
+                            </div>
+
                     </div>
                 </span>   <!--  FIM PERM-CAMBIO  -->
                 <span id="perm-faturamento">
                     <div class="div-param-2">
+
+                        <div class="div-param-4">
+                            <label for="inputUFOrigem">UF Origem</label>
+                            <select name="inputUFOrigem" id="inputUFOrigem" disabled="true"></select>
+                        </div>
+                        <div class="div-param-4">
+                            <label for="inputUFDestino">UF Destino</label>
+                            <select name="inputUFDestino" id="inputUFDestino"></select>
+                        </div>
                         <div class="div-param-3">
                             <label for="inputTipoFaturamento">Tipo de Faturamento</label>
                             <select name="inputTipoFaturamento" id="inputTipoFaturamento" value="">
@@ -79,93 +98,116 @@
                             </select>
                         </div>
                         <div class="div-param-4">
-                            <label for="inputUFOrigem">UF Origem</label>
-                            <select name="inputUFOrigem" id="inputUFOrigem" disabled="true"></select>
-                            <label for="inputUFDestino">UF Destino</label>
-                            <select name="inputUFDestino" id="inputUFDestino"></select>
-                        </div>
-                        <div class="div-param-4">
                             <label for="checkICMS">Incentivo ICMS?</label>
                             <input type="checkbox" id="checkICMS">
-                            <label for="checkGoiania">Destino Goiânia?</label>
+                            <label for="checkGoiania" style="margin-left: 18px;">Destino Goiânia?</label>
                             <input type="checkbox" id="checkGoiania">
                         </div>
                     </div>
                 </span>     <!--  FIM PERM-FATURAMENTO  -->
-                <div class="div-margens-1">
-                    <span id="perm-margens">
-                        <div class="div-param-2">
-                            <div class="div-param-3">
-                                <input type="number" class="inputMargem" id="inputMargem" step="0.1">
-                                <label for="">% Margem</label>
+                <span id="perm-margens-comissoes">
+                    <div class="div-margens-1">
+                        <span id="perm-margens">
+                            <div class="div-margens-2">
+                                <div class="div-param-3">
+                                    <input type="number" class="inputMargem" id="inputMargem" step="0.1">
+                                    <label for="">% Margem</label>
+                                </div>
+                                <div class="div-param-3">
+                                    <input type="number" class="inputMargem" id="inputTxAdm" step="0.1">
+                                    <label for="">% Tx. Adm.</label>
+                                </div>
+                                <div class="div-param-3">
+                                    <input type="number" class="inputMargem" id="inputSvTerc" step="0.1">
+                                    <label for="">% Sv. Terc.</label>
+                                </div>
                             </div>
-                            <div class="div-param-3">
-                                <input type="number" class="inputMargem" id="inputTxAdm" step="0.1">
-                                <label for="">% Tx. Adm.</label>
-                            </div>
-                            <div class="div-param-3">
-                                <input type="number" class="inputMargem" id="inputSvTerc" step="0.1">
-                                <label for="">% Sv. Terc.</label>
-                            </div>
-                        </div>
-                    </span>     <!--  FIM PERM-MARGENS  -->
-                    <span id="perm-comissoes">
-                        <div class="div-param-2">
-                            <fieldset style="border-radius: 5px;">
-                                <legend>Comissões</legend>
-                                <div class="div-param-3">
-                                    <input type="checkbox" id='checkDiretoria'>
-                                    <label for="">Diretoria</label>
-                                </div>
-                                <div class="div-param-3">
-                                    <input type="checkbox" id='checkComercial'>
-                                    <label for="">Comercial</label>
-                                </div>
-                                <div class="div-param-3">
-                                    <input type="checkbox" id='checkPrevendas'>
-                                    <label for="">Pré-vendas</label>
-                                </div>
-                                <div class="div-param-3">
-                                    <input type="checkbox" id='checkParceiro'>
-                                    <label for="">Parceiro</label>
-                                </div>
-                            </fieldset>
-                        </div>    
-                    </span>      <!--  FIM PERM-COMISSOES  -->
-                </div>
+                        </span>     <!--  FIM PERM-MARGENS  -->
+                        <span id="perm-comissoes">
+                            <div class="div-margens-2">
+                                <fieldset style="border-radius: 2px; border-color: #d9d9d9;">
+                                    <legend>Comissões</legend>
+                                    <div class="div-param-3">
+                                        <input type="checkbox" id='checkDiretoria'>
+                                        <label for="">Diretoria</label>
+                                    </div>
+                                    <div class="div-param-3">
+                                        <input type="checkbox" id='checkComercial'>
+                                        <label for="">Comercial</label>
+                                    </div>
+                                    <div class="div-param-3">
+                                        <input type="checkbox" id='checkPrevendas'>
+                                        <label for="">Pré-vendas</label>
+                                    </div>
+                                    <div class="div-param-3">
+                                        <input type="checkbox" id='checkParceiro'>
+                                        <label for="">Parceiro</label>
+                                    </div>
+                                </fieldset>
+                            </div>    
+                        </span>      <!--  FIM PERM-COMISSOES  -->
+                    </div>
+                </span>
                 <span id="perm-formatar">
                     <div class="div-format-1">
                         <div class="div-format-2">
-                            <button class="btn-format" id="btnContrib"> Upd % </button>
-                        </div>
-                        <div class="div-format-2">
-                            <button class="btn-format" id="btnKit"> + kit </button>
+                            <button class="btn-format" id="btnLinha"> + linha </button>
+                            <input type="number" name="inputNumLinha" id="inputNumLinha" value="1" step="1" min="1" >
                         </div>
                         <div class="div-format-2">
                             <!-- <input type="number" name="inputNumTabela" id="inputNumTabela"value="1" step="1" min="1"> -->
                             <button class="btn-format" id="btnTabela"> + tabela </button>
                         </div>
                         <div class="div-format-2">
-                            <button class="btn-format" id="btnLinha"> + linha </button>
-                            <input type="number" name="inputNumLinha" id="inputNumLinha" value="1" step="1" min="1" >
+                            <button class="btn-format" id="btnKit"> + kit </button>
                         </div>
                     </div>
                     <div class="div-format-1">
                         <div class="div-format-2">
-                            <button class="btn-format" id="btnSVadd"> + serv </button>
+                            <button class="btn-format" id="btnRemoverLinha"> Remover </button>
+                            <label for="btnRemoverLinha" style="color: gray; font-style: italic; margin-left: 20px;">(Linha / Kit / Tabela)</label>
+                        </div>
+                    </div>
+                    <div class="div-format-1">
+                        <div class="div-format-2">
+                            <button class="btn-format" id="btnContrib"> Contribuição % </button>
+                        </div>
+                    </div>
+                    <div class="div-format-1">
+                        <div class="div-format-2">
+
+                            <button id="btn-mvl-sheet">  &lt </button>
+                            <input autofocus id="input-list-planilha" placeholder="Planilhas adicionadas" list="datalist-planilha" />
+                            <datalist id="datalist-planilha">
+                            </datalist>
+
+                            <button id="btn-mvr-sheet"> &gt </button>
+
+                        </div>
+                        <div class="div-format-2"></div>
+                    </div>
+                    <div class="div-format-1">
+
+                        <div class="div-format-2">
+                            <button id="btn-add-sheet-sv">+ Planilha de Serviços</button>
                         </div>
                         <div class="div-format-2">
-                            <button class="btn-format" id="btnSVrem"> - serv </button>
+                            <button id="btn-add-sheet-br">+ Planilha em Branco</button>
                         </div>
                         <div class="div-format-2">
-                            <button class="btn-format" id="btnPLadd"> + plan </button>
-                        </div>
-                        <div class="div-format-2">
-                            <button class="btn-format" id="btnPLrem"> - plan </button>
+                            <button id="btn-rem-sheet-sv">Remover Planilha</button>
                         </div>
 
                     </div>
-                    <div class="div-format-1">
+                    <div class="div-format-1" style="margin-top: 80px;">
+                        <div class="div-format-2">
+                            <button id="btn-bloquear-edicao">Bloquear FPV</button>
+                        </div>
+
+                    </div>
+                </span>     <!--  FIM PERM-FORMATAR  -->
+                <span id="perm-implantacao">
+                    <div class="div-format-1" >
                         <div class="div-format-2">
                             <!-- <input type="number" name="inputNumTabela" id="inputNumTabela"value="1" step="1" min="1"> -->
                             <button class="btn-format" id="btnSiecon" disabled="true"> SIECON </button>
@@ -177,45 +219,8 @@
                             <button class="btn-format" id="btnDI"> D.I. </button>
                         </div>
                     </div>
+                </span> <!--  FIM PERM-IMPLANTACAO  -->
 
-                    <div class="div-format-1">
-                        <div class="div-format-2">
-                            <!-- <input type="number" name="inputNumTabela" id="inputNumTabela"value="1" step="1" min="1"> -->
-                            <input list="datalist-planilha-sv" name="list-planiliha-sv" id="input-list-planilha-sv">
-                            <datalist id="datalist-planilha-sv">
-                              <option value="Nova Planilha de Serviços">
-                            </datalist>
-                        </div>
-                        <div class="div-format-2">
-                            <button>Add</button>
-                        </div>
-                        <div class="div-format-2">
-                            <button>Rem</button>
-                        </div>
-                        <div class="div-format-2">
-
-                        </div>
-                    </div>
-
-                    <div class="div-format-1">
-                        <div class="div-format-2">
-                            <!-- <input type="number" name="inputNumTabela" id="inputNumTabela"value="1" step="1" min="1"> -->
-                            <input list="datalist-planilha-br" name="list-planiliha-br" id="input-list-planilha-br">
-                            <datalist id="datalist-planilha-br">
-                              <option value="Nova Planilha em Branco">
-                            </datalist>
-                        </div>
-                        <div class="div-format-2">
-                            <button>Add</button>
-                        </div>
-                        <div class="div-format-2">
-                            <button>Rem</button>
-                        </div>
-                        <div class="div-format-2">
-
-                        </div>
-                    </div>
-                </span>     <!--  FIM PERM-FORMATAR  -->
             </span>
             <div style="display: none;">
                 <p>Enter a key/value pair to store or retrieve:</p>

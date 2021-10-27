@@ -85,11 +85,20 @@ Office.initialize = () => {
     document.getElementById("checkGoiania").onchange = atualizaMargem;
     document.getElementById("checkICMS").onchange = atualizaMargem;
     document.getElementById("btn-login").onclick = hideFields;
-    document.getElementById("btnSVadd").onclick = copiarPlanilhaSV;
+    document.getElementById("btn-add-sheet-sv").onclick = copiarPlanilhaSV;
+    document.getElementById("btn-add-sheet-br").onclick = novaPlanilhaCustomizada;
+    document.getElementById("btn-rem-sheet-sv").onclick = removePlanilhaSV;
     document.getElementById("btnContrib").onclick = calculaContribuicao;
     document.getElementById("btnCronograma").onclick = cronograma;
     document.getElementById("btnDI").onclick = copiaTabelaParaDI;
-    document.getElementById("input-list-planilha-sv").onkeyup = planilhaSV;
+    document.getElementById("input-list-planilha").onkeyup = planilhaSV;
+    document.getElementById("a-cambio").onclick = mostraCambio;
+    document.getElementById("a-edicao").onclick = mostraEdicao;
+    document.getElementById("a-margens").onclick = mostraMargens;
+    document.getElementById("btn-mvr-sheet").onclick = moveParaDireita;
+    document.getElementById("btn-mvl-sheet").onclick = moveParaEsquerda;
+    //document.getElementById("a-implantacao").onclick = mostraImplantacao;
+
     //document.getElementById("input-list-planilha-br").onkeyup = planilhaBR;
 
     
@@ -153,7 +162,10 @@ async function comeceAqui() {
           }
       });
       
-    });    
+    });
+    
+
+    
     //document.getElementById("perm-all-other-fields").hidden = true;
     //atualiza array com informações das tabelas
     //await atualizaArrayTabelas();
@@ -379,6 +391,8 @@ async function atualizaParametros() {
     p.state.euroPTAX      = range.m_values[20];
 
     
+
+    //ATUALIZA ARRAY ID.SERVICOS
     range = ws.getRange("V3:V12").load("values");
     await context.sync();
 
@@ -390,8 +404,22 @@ async function atualizaParametros() {
         }
     }
 
+    //ATUALIZA ARRAY ID.CUSTOM
+    range = ws.getRange("Y2:Y11").load("values");
+    await context.sync();
+
+    var b = range.values;
+        
+    for (i in b){
+        if (b[i] != ''){
+            id.custom.push(b[i][0]);
+        }
+    }
+    
+
     atualizaDivPTAX();
     buscaMargem();
+    await atualizaListaPlanilhas()
 
 
     return context;
@@ -555,15 +583,189 @@ async function hideFields() {
 //13 CRONOGRAMA
 //14 CAMBIO-LEITURA
 
-
-
-
-
 }
 
 
-function planilhaSV(){
-  const inputSV = document.getElementById("input-list-planilha-sv");
+async function atualizaListaPlanilhas(){
+  await Excel.run(async (context)=>{
+    //percorre o array de IDs e pula id.servicos[0], pois é a planilha modelo
+    for (i in id.servicos){
+      if (i > 0){
 
-  console.log(inputSV.value);
+        //pega nome da planilha de serviços
+        let plan = context.workbook.worksheets.getItem(id.servicos[i])
+        plan.load("name");
+        await context.sync();
+
+        addOptionToList(plan.name)
+      }
+    }
+
+    for (i in id.custom){
+      //pega nome da planilha customizada/em branco
+      let plan = context.workbook.worksheets.getItem(id.custom[i])
+      plan.load("name");
+      await context.sync();
+      
+      //atualiza lista de planlilhas em branco
+      addOptionToList(plan.name, true)
+    }
+
+  });
+}
+
+//monitora o input em texto da lista de planilhas e habilita ou desabilita os botões
+function planilhaSV(){
+  const input = document.getElementById("input-list-planilha").value;
+  const datalist = document.getElementById("datalist-planilha").options;
+  //console.log(inputSV.value);
+
+  if (input == "SV" || input == "param" || input == "list" || input == "login" || input == "trib" ||  input == "extenso" ||  input == "Precificação" || input == "CRONOGRAMA-COMPRAS" || input == "ANEXO IV" || input == "modelos" || input == "DESPESAS-INDIRETAS" ){
+    document.getElementById("btn-add-sheet-sv").disabled = true;
+    document.getElementById("btn-add-sheet-br").disabled = true;
+    document.getElementById("btn-rem-sheet-sv").disabled = true;
+    return
+  }
+
+  if (input == ''){
+    document.getElementById("btn-add-sheet-sv").disabled = false;
+    document.getElementById("btn-add-sheet-br").disabled = false;
+    document.getElementById("btn-rem-sheet-sv").disabled = true;
+  }
+
+
+  if (existeNaLista(input)){
+    document.getElementById("btn-add-sheet-sv").disabled = true;
+    document.getElementById("btn-add-sheet-br").disabled = true;
+    document.getElementById("btn-rem-sheet-sv").disabled = false;
+  }else{
+    document.getElementById("btn-add-sheet-sv").disabled = false;
+    document.getElementById("btn-add-sheet-br").disabled = false;
+    document.getElementById("btn-rem-sheet-sv").disabled = true;
+  }
+
+}
+
+//procura se um valor existe na lista de planilhas SV ou BR
+//retorna true se existe e false se não
+
+function existeNaLista (valor){
+  const datalist = document.getElementById("datalist-planilha").options;
+
+  if (valor == ''){
+    return false;
+  }
+
+  for (i in datalist){
+    if (datalist[i].value == valor){
+      return true;
+    }
+  }
+  return false;
+}
+
+//recebe um texto e adiciona à lista de planlilhas
+//o argumento lista deve ser 'sv'ou 'br'
+function addOptionToList (valor, customizada = false){
+  var node = document.createElement('option');
+  node.value = valor;
+  if(customizada){
+    node.text = 'Planilha Customizada'
+  }else{
+    node.text = 'Planilha de Serviços'
+  }
+
+
+  //verifica se o valor já existe no datalist. Se existir, ignora
+  if ( !existeNaLista (valor)){
+    document.getElementById('datalist-planilha').appendChild(node)
+  }else{
+    console.log("já existe")
+  }
+}
+
+
+function mostraCambio(){
+  //oculta todas os campos
+  //oculta login
+  document.getElementById("perm-login").hidden = true;
+  //oculta faturamento
+  document.getElementById("perm-faturamento").hidden = false;
+  //oculta margens
+  document.getElementById("perm-margens-comissoes").hidden = true;
+
+  //oculta formatar
+  document.getElementById("perm-formatar").hidden = true;
+  //oculta implantacao
+  document.getElementById("perm-implantacao").hidden = true;
+  //exibe o campo de PTAX
+  document.getElementById("perm-cambio").hidden = false;
+
+  var menu = document.getElementById("nav-ul");
+  for (i in menu.children){
+    if (/^([0-9]+)$/.test(i)){
+      menu.children[i].style.borderBottom = ""
+    }
+    
+  }
+  menu.children["li-cambio"].style.borderBottom = "3px solid";
+  menu.children["li-cambio"].style.borderColor = "white";
+
+}
+
+function mostraEdicao(){
+  //oculta todas os campos
+  //oculta login
+  document.getElementById("perm-login").hidden = true;
+  //oculta faturamento
+  document.getElementById("perm-faturamento").hidden = true;
+  //oculta margens
+  document.getElementById("perm-margens-comissoes").hidden = true;
+
+  //oculta implantacao
+  document.getElementById("perm-implantacao").hidden = true;
+  //oculta o campo de PTAX
+  document.getElementById("perm-cambio").hidden = true;
+  //exibe formatar
+  document.getElementById("perm-formatar").hidden = false;
+  
+  
+  var menu = document.getElementById("nav-ul");
+  for (i in menu.children){
+    if (/^([0-9]+)$/.test(i)){
+      menu.children[i].style.borderBottom = ""
+    }
+    
+  }
+  menu.children["li-edicao"].style.borderBottom = "3px solid";
+  menu.children["li-edicao"].style.borderColor = "white";
+
+
+}
+function mostraMargens(){
+  //oculta todas os campos
+  //oculta login
+  document.getElementById("perm-login").hidden = true;
+  //oculta faturamento
+  document.getElementById("perm-faturamento").hidden = true;
+  //oculta implantacao
+  document.getElementById("perm-implantacao").hidden = true;
+  //oculta o campo de PTAX
+  document.getElementById("perm-cambio").hidden = true;
+  //exibe formatar
+  document.getElementById("perm-formatar").hidden = true;
+  //exibe margens
+  document.getElementById("perm-margens-comissoes").hidden = false;
+
+
+  var menu = document.getElementById("nav-ul");
+  for (i in menu.children){
+    if (/^([0-9]+)$/.test(i)){
+      menu.children[i].style.borderBottom = ""
+    }
+    
+  }
+  menu.children["li-margens"].style.borderBottom = "3px solid";
+  menu.children["li-margens"].style.borderColor = "white";
+
 }

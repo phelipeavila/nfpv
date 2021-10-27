@@ -16,6 +16,17 @@
      margin: 0;
      padding: 0;
  }
+
+ label{
+    font-size: 0.7rem;
+    font-style: italic;
+    color: gray;
+}
+
+ #perm-all-other-fields{
+
+     padding-right: 10px;
+ }
  
  .ms-welcome__header {
     padding: 10px;
@@ -33,13 +44,14 @@
     display: flex;
     -webkit-flex-direction: column;
     flex-direction: column;
-    -webkit-flex-wrap: nowrap;
-    flex-wrap: nowrap;
-    -webkit-align-items: center;
-    align-items: center;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-align-items: flex-start;
+    align-items: flex-start;
     -webkit-flex: 1 0 0;
     flex: 1 0 0;
-    padding: 05px 10px;
+    padding-top: 05px;
+    width: 100%;
  }
  
  .ms-welcome__main > h2 {
@@ -92,14 +104,21 @@ b {
     /* padding-left: 20px;  */
     font-size: 0.8rem;
     /* border: solid 1px; */
+    margin-top:15px;
+    border-bottom: 2px inset;
+    border-color:  rgba(217,217,217,1);
 }
 
 .div-cambio-2{
-    display: flex;
+    display: inline-flex;
     flex-direction: row;
-    padding: 5px 10px;
+    align-items: center;
+
+
+
+    padding: 15px 10px;
     justify-content: flex-start;
-    align-items: baseline;
+
     font-size: 0.7rem;
     
 }
@@ -109,10 +128,8 @@ b {
     margin-right: 5px;
     border-radius: 5px;
     font-size: 0.7rem;
-}
-
-input {
-    border-radius: 5px;
+    font-style: italic;
+    color: gray;
 }
 
 button {
@@ -120,9 +137,39 @@ button {
 }
 
 #inputUSD, #inputEUR{
+    border-width: 1px;;
+    border-style: solid;
+    border-color: #9c9c9c;
+    border-radius: 2px;
     width: 70px;
-    
+    height: 25px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #000000;
+    font-size: 0.6rem;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-left: 3px;
 }
+
+#inputUSD{
+    margin-left: 10px;
+}
+
+#inputDate{
+    border-width: 1px;;
+    border-style: solid;
+    border-color: #9c9c9c;
+    border-radius: 2px;
+    width: 133px;
+    height: 25px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #000000;
+    font-size: 0.6rem;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+
 
 .div-login-1{
     display: flex;
@@ -138,6 +185,9 @@ button {
     display: flex;
     flex-direction: row;
     padding-top: 15px;
+    margin-left: 10px;
+    margin-right: 10px;
+    align-items: center;
 }
 
 .div-format-2 {
@@ -146,6 +196,10 @@ button {
     margin-left: 7px;
     margin-right: 7px;
     padding: 3px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 
 #inputNumLinha, #inputNumTabela{
@@ -161,16 +215,17 @@ button {
 }
 
 .div-margens-1 {
-    display: flex;
+    display: inline-flex;
     flex-direction: row;
     align-items: center;
     margin: 15px;
     /* border: solid 1px #0078d7; */
+    
     justify-content: space-between;
-    width: 85%;
+
 }
 
-.div-param-2 {
+.div-margens-2 {
     display: flex;
     flex-direction: column;
     /* border: solid 1px red; */
@@ -178,26 +233,39 @@ button {
     align-items: right;
     align-items: baseline;
     
+    margin: 15px 20px;
+}
+.div-param-2 {
+    display: flex;
+    flex-direction: column;
+    /* border: solid 1px red; */
+    
+    align-items: right;
+    align-items: baseline;
+    margin-top: 15px;
 }
 
 .div-param-3 {
     display: flex;
     flex-direction: row;
     align-items: center;
+    text-align: center;
     /* border: solid 1px yellow; */
     margin: 5px;
     font-size: 0.7rem;
-    
+    padding-left: 10px;;
 }
 .div-param-4 {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+
+    text-align: center;
     /* border: solid 1px yellow; */
     width: 100%;
     margin: 5px;
     font-size: 0.7rem;
+    padding-left: 10px;;
     
 }
 
@@ -208,11 +276,197 @@ button {
     margin-right: 5px;
 }
 
-#inputUFOrigem, #inputTipoFaturamento {
+#inputUFDestino, #inputUFOrigem, #inputTipoFaturamento {
     margin: 3px 10px;
     font-size: 0.7rem;
+    border-style: solid;
+    border-color: #9c9c9c;
+    border-radius: 2px;
+    width: 69px;
+    height: 25px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #000000;
 }
 
 #inputUFDestino {
     font-size: 0.7rem;
+}
+
+#inputTipoFaturamento {
+    width: 100px;
+}
+
+#nav-bar{
+    background-color: #2B2E34;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 0.9rem;
+    height: 40px;
+    width: 110%;
+    display: flex ;
+    flex-direction: row;
+    align-items: center;
+
+    -webkit-box-shadow: 0px 8px 14px -4px #000000; 
+    box-shadow: 0px 8px 14px -4px #000000;
+    font-weight: bold;
+    
+}
+
+#nav-ul{
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    list-style-type: none;
+}
+
+
+
+.nav-item a{
+    
+    text-decoration: none;
+    color:#D9D9D9;
+    height: 100%;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 3px;
+    border-bottom: white;
+
+
+}
+
+ul{
+    height: 100%;
+}
+
+li{
+    padding-left: 10px;
+    padding-right: 10px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    height: 100%;
+    text-align: center;
+
+}
+
+
+li:hover a:hover{
+    background: #d9d9d9ec;
+    color: #000000;
+
+    height: 100%;
+    align-items: center;
+    
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 3
+
+}
+
+#btnContrib{
+    background-color: turquoise;
+    border-color: turquoise;
+    border-style: none;
+    border-radius: 2px;
+    width: 128px;
+    height: 30px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color: #000000;
+}
+
+#btnKit, #btnTabela, #btnLinha, #btnRemoverLinha{
+    background-color: turquoise;
+    border-color: turquoise;
+    border-style: none;
+    border-radius: 2px;
+    width: 80px;
+    height: 30px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color: #000000;
+}
+
+#btnRemoverLinha{
+    background-color: tomato;
+    border-color: tomato;
+
+}
+
+
+
+#inputNumLinha{
+    border-style: solid;
+    border-color: #9c9c9c;
+    border-radius: 2px;
+    width: 40px;
+    height: 23px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #000000;
+    font-size: 0.6rem;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+
+#input-list-planilha{
+    width: 234px;
+    border-style: solid;
+    border-color: #9c9c9c;
+    border-radius: 2px;
+    height: 23px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #000000;
+    font-size: 0.6rem;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+
+
+#btn-mvl-sheet, #btn-mvr-sheet, #btn-add-sheet-sv, #btn-add-sheet-br, #btn-rem-sheet-sv{
+    background-color: turquoise;
+    border-color: turquoise;
+    border-style: none;
+    border-radius: 2px;
+    width: 80px;
+    height: 30px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color: #000000;
+    font-size: 0.6rem;
+}
+#btn-mvl-sheet, #btn-mvr-sheet{
+    background-color: #D9D9D9;
+    border-color: #D9D9D9;
+    width: 20px;
+    height: 29px;
+}
+
+#btn-rem-sheet-sv{
+    background-color: tomato;
+    border-color: tomato;
+}
+
+#btn-rem-sheet-sv:disabled{
+    background-color: rgb(191, 144, 136);
+    border-color: rgb(191, 144, 136);
+
+}
+#btn-add-sheet-sv:disabled, #btn-add-sheet-br:disabled{
+    background-color: rgb(109, 176, 170);
+    border-color: 	rgb(109, 176, 170);
+}
+
+#btnRemoverLinha:active, #btnContrib:active, #btnKit:active, #btnTabela:active, #btnLinha:active, #btn-add-sheet-sv:active, #btn-add-sheet-br:active, #btn-rem-sheet-sv:active, #btn-mvl-sheet:active, #btn-mvr-sheet:active{
+    border-style: inset;
 }
