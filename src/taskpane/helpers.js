@@ -503,6 +503,7 @@ async function getCellProperties(address) {
       await renumerar(); 
   }
 
+
   async function novoKit() {
       await atualizaArrayTabelas();
       var indexTabela = await estaEmTabela();
@@ -694,6 +695,75 @@ async function getCellProperties(address) {
       });
 
       console.log("dentro tabela");
+  }
+
+
+
+  async function estaEmKit(){
+
+    return
+  }
+
+  //valida se as linhas do range selecionado estão contidas em uma tabela.
+  //se a seleção contiver alguma linha fora da tabela, retorna -1
+  //se estiver contido, retorna o index da tabela
+  async function rangeNaTabela(){
+    await atualizaArrayTabelas();
+
+    return await Excel.run(async (context) => {
+
+        var selecao = await selectedRange();
+
+        if(selecao.planilha != 'Precificação'){
+            console.log('Fora da planilha')
+            return -1
+        }
+
+        //verifica se o range está contido em alguma das tabelas
+        for (i in tabelas){
+
+            //se é a (primeira || segunda || terceira ) && (última || penúltima)
+            //se entre terceira e penúltima
+            if ((selecao.inicial == tabelas[i].linha_ini || selecao.inicial == tabelas[i].linha_ini + 1 || selecao.inicial == tabelas[i].linha_ini + 2) && selecao.final == tabelas[i].linha_fin){
+                console.log(`está na tabela ${tabelas[i].index}`)
+                return tabelas[i].index
+                // primeira <= selecao < última
+            }else if(selecao.inicial >= tabelas[i].linha_ini && selecao.final < tabelas[i].linha_fin){
+                console.log(`está na tabela ${tabelas[i].index}`)
+                return tabelas[i].index
+            }else{
+                console.log('Está fora')
+            }
+        }
+        return -1
+    })
+  }
+
+  async function selectedRange(){
+    return await Excel.run(async (context) => {
+        var selecao = {
+            'inicial' : 0,
+            'final': 0,
+            'planilha': '',
+        }
+
+        var range = context.workbook.getSelectedRange();
+        range.load("address");
+        await context.sync();
+
+        selecao.inicial = parseInt(range.address.split('!')[1].split(':')[0].replace(/[A-Z]/g, ''));
+        selecao.planilha = range.address.split('!')[0];
+
+        //caso só tenha uma linha selecionada, daria erro no split
+        //por isso coloquei o try-catch
+        try{
+            selecao.final = parseInt(range.address.split('!')[1].split(':')[1].replace(/[A-Z]/g, ''));
+        }catch (e){
+            selecao.final = parseInt(range.address.split('!')[1].replace(/[A-Z]/g, ''));
+        }
+
+        return selecao;
+    });
   }
 
   function carregaListaUF() {
@@ -1617,11 +1687,84 @@ async function removePlanilhaSV(){
 
 
 async function removeLinha(){
-    //verifica range selecionado
-    //verifica se é um range válido:
-    ///o range contem célula fora de tabela? Se sim, Não excluir e retornar
+    await atualizaArrayTabelas();
+
+    return await Excel.run(async (context) => {
+
+        var selecao = await selectedRange();
+        var workbook = context.workbook;
+
+        if(selecao.planilha != 'Precificação'){
+            console.log('Fora da planilha')
+            return -1
+        }
+        
+        console.log(`if(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)`)
+        console.log(`if(${paraExcluir.inicial} == ${selecao.inicial} && ${paraExcluir.final} == ${selecao.final})`)
+        console.log(`${(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)}`)
+        
+        
+        if(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final){
+            workbook.worksheets.getItem(id.precificacao).getRange(selecao.inicial + ':' + selecao.final).delete("Up");
+            paraExcluir.inicial = -1;
+            paraExcluir.final = -1;
+            await context.sync();
+            await renumerar();
+            await atualizaArrayTabelas();
+
+            return 0
+        }
+
+        //trata o range selecionado
+        for (i in tabelas){
+            //se selecao é a (primeira || segunda || terceira ) && (última || penúltima)
+            if ( (selecao.inicial == tabelas[i].linha_ini || selecao.inicial == tabelas[i].linha_ini +1 || selecao.inicial == tabelas[i].linha_ini +2) && 
+            (selecao.final == tabelas[i].linha_fin || selecao.final == tabelas[i].linha_fin -1)){
+                console.log('excluir tabela toda');
+                console.log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`);
+                selecao.inicial = tabelas[i].linha_ini;
+                selecao.final = tabelas[i].linha_fin + 1;
+
+                workbook.worksheets.getItem(id.precificacao).getRange(selecao.inicial + ':' + selecao.final).select();
+                paraExcluir.inicial = selecao.inicial;
+                paraExcluir.final = selecao.final;
+
+            
+            //se selecao é entre (primeira) && (<= última)
+            }else if ( (selecao.inicial == tabelas[i].linha_ini) && (selecao.final <= tabelas[i].linha_fin)){
+                console.log('excluir tabela toda')
+                console.log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`)
+                selecao.inicial = tabelas[i].linha_ini;
+                selecao.final = tabelas[i].linha_fin + 1;
+                workbook.worksheets.getItem(id.precificacao).getRange(selecao.inicial + ':' + selecao.final).select();
+                paraExcluir.inicial = selecao.inicial;
+                paraExcluir.final = selecao.final;
+
+            //se selecao é entre terceira e penúltima
+            }else if(selecao.inicial >= tabelas[i].linha_ini +2 && selecao.final <= tabelas[i].linha_fin -1){
+                console.log('meio da tabela')
+
+                //se a linha final está dentro de um kit -> expandir seleção para o kit todo
+                //somente se a linha inicial estiver fora do kit!!
+                for (j in tabelas[i].kit){
+
+                    if (selecao.final >= tabelas[i].kit[j].linha && selecao.final < tabelas[i].kit[j].linha + tabelas[i].kit[j].subitens && selecao.inicial < tabelas[i].kit[j].linha){
+                        selecao.final = tabelas[i].kit[j].linha + tabelas[i].kit[j].subitens;
+                        paraExcluir.inicial = selecao.inicial;
+                        paraExcluir.final = selecao.final;
+                    }
+                }
+
+                workbook.worksheets.getItem(id.precificacao).getRange(selecao.inicial + ':' + selecao.final).select();
+                paraExcluir.inicial = selecao.inicial;
+                paraExcluir.final = selecao.final;
+            }
+        }
+    });
+
+    
+    
     ///a seleção é somente a última linha (do subtotal)? Se sim, não excluir e retornar
-    ///a seleção é somente a segunda linha (item//tipo//descrição)? Se sim, não excluir e retornar
     ///o range contém o cabeçalho de uma tabela? Se sim, expandir a seleção até o final 
     ///o range contém o cabeçalho de um kit? Se sim, a última linha do range é maior que a última linha do kit? Se não, expandir até o final do kit
     ///(validar se as fórmulas do cabeçalho do kit se ajustam sozinhas)

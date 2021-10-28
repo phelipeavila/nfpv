@@ -172,12 +172,26 @@ button {
 
 
 .div-login-1{
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
     padding-top: 2px;
     margin-right: 10px;
     margin-left: 10px;
     margin-bottom: 10px;
+    width: 100vw;
+
+}
+.div-login-2{
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding-top: 2px;
+    margin-right: 10px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    width: max-content;
 
 }
 
@@ -301,7 +315,7 @@ button {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: 0.9rem;
     height: 40px;
-    width: 110%;
+    width: 100vw;
     display: flex ;
     flex-direction: row;
     align-items: center;
@@ -317,7 +331,7 @@ button {
     flex-direction: row;
     align-items: center;
     justify-content: space-evenly;
-    width: 100%;
+    width: 100vw;
     list-style-type: none;
 }
 

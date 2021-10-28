@@ -36,6 +36,11 @@ var colunas = [
   {ini: "AK", fin: "AK"}
 ]
 
+var paraExcluir = {
+  inicial:-1,
+  final:-1
+}
+
 var id = {precificacao: "{5B74A0A4-C313-D74D-B6C9-894790A73C89}",
           servicos:["{A7441363-1A72-4ACD-854A-C140198E488F}"],
           cronograma:"{4360F843-007A-4860-8658-B6E2AA8612CD}",
