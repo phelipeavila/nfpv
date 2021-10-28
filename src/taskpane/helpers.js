@@ -756,8 +756,6 @@ async function getCellProperties(address) {
       console.log("dentro tabela");
   }
 
-
-
   async function estaEmKit(){
 
     return
