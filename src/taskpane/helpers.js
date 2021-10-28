@@ -1065,12 +1065,16 @@ async function copiarPlanilhaSV(){
         
         if (workbook.protection.protected) {
             workbook.protection.unprotect(SECRET);
+            await context.sync();
         }
+        
 
-        let sampleSheet = workbook.worksheets.getItem(id.servicos[0]); 
-        let precificacao = workbook.worksheets.getItem(id.precificacao); 
-        let copiedSheet = sampleSheet.copy(Excel.WorksheetPositionType.after, precificacao);
-    
+        var sampleSheet = workbook.worksheets.getItem(id.servicos[0]); 
+        var precificacao = workbook.worksheets.getItem(id.precificacao); 
+        sampleSheet.visibility = Excel.SheetVisibility.hidden;
+        var copiedSheet = sampleSheet.copy(Excel.WorksheetPositionType.after, precificacao);
+        sampleSheet.visibility = Excel.SheetVisibility.veryHidden;
+        
         sampleSheet.load("name");
         copiedSheet.load("name");
 
@@ -1079,7 +1083,9 @@ async function copiarPlanilhaSV(){
         
         copiedSheet.visibility = Excel.SheetVisibility.visible;
 
+        
         await context.sync();
+
         copiedSheet.position = precificacao.position + 1;
         copiedSheet.visibility = Excel.SheetVisibility.visible;
 
@@ -1618,15 +1624,15 @@ async function teste(){
     return await Excel.run(async (context)=>{
         //Excel.createWorkbook(context.workbook);
         //context.workbook.save(Excel.SaveBehavior.prompt);
-        const plan = context.workbook.worksheets.getItem(id.param)
-        var range = plan.getRange("V2:V12")
-        range.load("values");
+        const plan = context.workbook.worksheets.getItem("SV")
+        //var range = plan.getRange("V2:V12")
+        plan.load("id");
         await context.sync();
-        range = range.values;
+        //range = range.values;
 
         //await context.sync()
         //console.log(plan.id);
-        return range;
+        return plan.id
     });
 
 }
