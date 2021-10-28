@@ -158,7 +158,7 @@ async function comeceAqui() {
   
       return context.sync().then(function() {
           if (!workbook.protection.protected) {
-              workbook.protection.protect("123");
+              workbook.protection.protect(SECRET);
           }
       });
       

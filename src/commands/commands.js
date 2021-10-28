@@ -24,6 +24,7 @@ var g = {};
 var p = {};
 var trib = {};
 var tabelas = [];
+const SECRET = '027504';
     //{ "index":1 , "num_linhas":5 , "linha_ini":9 , "linha_fin":16 }];
 var colunas = [
   {ini: "B", qtde: "H", fin: "K"},

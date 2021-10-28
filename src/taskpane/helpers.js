@@ -1064,7 +1064,7 @@ async function copiarPlanilhaSV(){
         await context.sync();
         
         if (workbook.protection.protected) {
-            workbook.protection.unprotect("123");
+            workbook.protection.unprotect(SECRET);
         }
 
         let sampleSheet = workbook.worksheets.getItem(id.servicos[0]); 
@@ -1100,7 +1100,7 @@ async function copiarPlanilhaSV(){
         }
 
         copiedSheet.activate();
-        workbook.protection.protect("123")
+        workbook.protection.protect(SECRET)
         copiedSheet.load("id")
         await context.sync();
         id.servicos.push(copiedSheet.id);
@@ -1130,7 +1130,7 @@ async function novaPlanilhaCustomizada(){
         await context.sync();
         
         if (workbook.protection.protected) {
-            workbook.protection.unprotect("123");
+            workbook.protection.unprotect(SECRET);
         }
 
         let novaPlanilha = workbook.worksheets.add('Planilha')
@@ -1168,7 +1168,7 @@ async function novaPlanilhaCustomizada(){
         }
 
         novaPlanilha.activate();
-        workbook.protection.protect("123")
+        workbook.protection.protect(SECRET)
         
         await context.sync();
         id.custom.push(novaPlanilha.id);
@@ -1190,7 +1190,7 @@ async function cronograma(){
     var numLinhasValidas = tabelas[tabelas.length - 1].linha_fin - tabelas[0].linha_ini - 2 //array com o número de linhas válidas
     
     return await Excel.run(async (context)=>{
-        context.workbook.protection.unprotect("123");
+        context.workbook.protection.unprotect(SECRET);
         const precificacao = context.workbook.worksheets.getItem("{5B74A0A4-C313-D74D-B6C9-894790A73C89}"); //planilha Precificação
         const cronograma = context.workbook.worksheets.getItem("{4360F843-007A-4860-8658-B6E2AA8612CD}");  //planilha CRONOGRAMA
         cronograma.load("visibility");
@@ -1203,7 +1203,7 @@ async function cronograma(){
         //se a planilha já estiver criada, ao pressionar o botão ela será escondida
         if (cronograma.visibility == Excel.SheetVisibility.visible){
             cronograma.visibility = Excel.SheetVisibility.veryHidden;
-            context.workbook.protection.protect("123")
+            context.workbook.protection.protect(SECRET)
             return context.sync();
         }
 
@@ -1344,7 +1344,7 @@ async function cronograma(){
 
         await context.sync();
         cronograma.activate();
-        context.workbook.protection.protect("123")
+        context.workbook.protection.protect(SECRET)
         await context.sync();
         //console.log("ID: " + cronograma.name );
 
@@ -1355,7 +1355,7 @@ async function cronograma(){
 async function copiaTabelaParaDI(){
     await atualizaArrayTabelas();
     return await Excel.run(async (context)=>{
-        context.workbook.protection.unprotect("123");
+        context.workbook.protection.unprotect(SECRET);
         const primeiraLinha = 21;
         const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
         const despesas = context.workbook.worksheets.getItem(id.despesas);
@@ -1365,7 +1365,7 @@ async function copiaTabelaParaDI(){
         //se a planilha já estiver criada, ao pressionar o botão ela será escondida
         if (despesas.visibility == Excel.SheetVisibility.visible){
             despesas.visibility = Excel.SheetVisibility.veryHidden;
-            context.workbook.protection.protect("123")
+            context.workbook.protection.protect(SECRET)
             return context.sync();
         }
         
@@ -1377,7 +1377,7 @@ async function copiaTabelaParaDI(){
         var tabelaOrigem = precificacao.getRange(rangeTabelaOrigem).load("values");
         var cabecalhos = [];
        
-        context.workbook.protection.protect("123");
+        context.workbook.protection.protect(SECRET);
 
         await context.sync()
 
@@ -1728,10 +1728,10 @@ async function removePlanilhaSV(){
 
         //remove a planilha
         if (workbook.protection.protected) {
-            workbook.protection.unprotect("123");
+            workbook.protection.unprotect(SECRET);
         }
         plan.delete()
-        workbook.protection.protect("123")
+        workbook.protection.protect(SECRET)
         document.getElementById("input-list-planilha").value = '';
         document.getElementById("btn-add-sheet-sv").disabled = false;
         document.getElementById("btn-add-sheet-br").disabled = false;
@@ -1845,13 +1845,13 @@ async function moveParaDireita(){
         await context.sync();
 
         if (workbook.protection.protected) {
-            workbook.protection.unprotect("123");
+            workbook.protection.unprotect(SECRET);
         }
         console.log(plan.position)
         //return plan.position;
         plan.position = plan.position + 1;
 
-        workbook.protection.protect("123");
+        workbook.protection.protect(SECRET);
         await context.sync();
         console.log(plan.position)
         return context.sync();
@@ -1876,12 +1876,12 @@ async function moveParaEsquerda(){
         await context.sync();
 
         if (workbook.protection.protected) {
-            workbook.protection.unprotect("123");
+            workbook.protection.unprotect(SECRET);
         }
 
         plan.position = plan.position - 1;
         
-        workbook.protection.protect("123");
+        workbook.protection.protect(SECRET);
         return context.sync();
     });
 }
