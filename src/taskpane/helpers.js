@@ -442,8 +442,6 @@ async function atualizaArrayTabelas() {
 
     return tabelas; 
 }
-
-
             
 //deve receber uma string no formato AA10, como as colunas no excel
 //retorna objeto com as propriedades: .style .format.fill.color .address
@@ -475,7 +473,6 @@ async function getCellProperties(address) {
       
     });
   }
-
 
   async function novaTabela() {
       await atualizaArrayTabelas()
