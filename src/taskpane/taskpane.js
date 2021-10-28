@@ -64,6 +64,7 @@ Office.initialize = () => {
     document.getElementById("btnKit").onclick = novoKit;
     document.getElementById("btnTabela").onclick = novaTabela;
     document.getElementById("btnLinha").onclick = novaLinha;
+    document.getElementById("btnRemoverLinha").onclick = removeLinha;
     document.getElementById("radioCambioData").onchange = radioListener;
     document.getElementById("radioCambioManual").onchange = radioListener;
     //document.getElementById("btnUpdateCambio").onclick = cambioListener;
@@ -648,7 +649,6 @@ function planilhaSV(){
 
 //procura se um valor existe na lista de planilhas SV ou BR
 //retorna true se existe e false se não
-
 function existeNaLista (valor){
   const datalist = document.getElementById("datalist-planilha").options;
 
@@ -665,7 +665,9 @@ function existeNaLista (valor){
 }
 
 //recebe um texto e adiciona à lista de planlilhas
-//o argumento lista deve ser 'sv'ou 'br'
+//a função deve recber como argumento o valor a ser adicionado.
+//Caso o segundo argumento seja falso ou não seja informado, o valor é considerado Planilha de Serviços
+//caso seja verdadeiro, o valor é considerado Planilha Customizada
 function addOptionToList (valor, customizada = false){
   var node = document.createElement('option');
   node.value = valor;
@@ -712,7 +714,6 @@ function mostraCambio(){
   menu.children["li-cambio"].style.borderColor = "white";
 
 }
-
 function mostraEdicao(){
   //oculta todas os campos
   //oculta login
@@ -769,3 +770,26 @@ function mostraMargens(){
   menu.children["li-margens"].style.borderColor = "white";
 
 }
+
+// function openDialog() {
+//   if (dialog != null){
+//     dialog.close();
+//   }
+//   Office.context.ui.displayDialogAsync(
+//     'https://localhost:3000/src/dialogs/popup.html',
+//     { height: 45, width: 55 },
+
+//     function (result) {
+//       dialog = result.value;
+//       dialog.addEventHandler(Microsoft.Office.WebExtension.EventType.DialogMessageReceived, processMessage);
+//       console.log(result.value)
+//     }
+//   );
+// }
+
+// function processMessage(arg) {
+//   document.getElementById("user-name").innerHTML = arg.message;
+//   console.log(arg.message)
+//   dialog.close();
+// }
+// var dialog = null;
