@@ -509,7 +509,7 @@ async function getCellProperties(address) {
       var indexTabela = await estaEmTabela();
 
       if (indexTabela == -1) {
-        console.log("fora de tabela");
+        console.log("fora de tabelaa");
         return -1
       }
 
@@ -522,35 +522,94 @@ async function getCellProperties(address) {
         //return 0;
         
         //console.log(range.address)
-        var kit = {
-            "linha_ini": 0,
-            "linha_fin": 0,
-            "planilha": "",
-        };
+        var kit = await selectedRange();
 
-        kit.linha_ini = parseInt(range.address.split('!')[1].split(':')[0].replace(/[A-Z]/g, ''));
-        kit.planilha = range.address.split('!')[0];
 
-        //caso só tenha uma linha selecionada, daria erro no split
-        //por isso coloquei o try-catch
-        try{
+        //valida se a seleção é ou está contida em um kit.
+        //se verdadeiro, irá desfazer o kit da seguinte forma:
+        //seleciona todas as linhas do  kit
+        //altera a formatação (cores e bordas)
+        //exclui o cabeçalho
+        //renumera
+        //atualiza array de tabelas
+        //return
+        for (i in tabelas[indexTabela - 1].kit){
+            if (kit.inicial >= tabelas[indexTabela - 1].kit[i].linha && kit.final <= tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens){
 
-            kit.linha_fin = parseInt(range.address.split('!')[1].split(':')[1].replace(/[A-Z]/g, ''));
+                kit.inicial = tabelas[indexTabela - 1].kit[i].linha;
+                kit.final = parseInt(tabelas[indexTabela - 1].kit[i].linha) + parseInt(tabelas[indexTabela - 1].kit[i].subitens);
 
-        }catch (e){
+                for (j in colunas){
+                    let selecao_nova = context.workbook.worksheets.getItem(id.precificacao).getRange(
+                        colunas[j].ini + kit.inicial.toString() + ":" +
+                        colunas[j].fin + kit.final.toString()  );
 
-            kit.linha_fin = parseInt(range.address.split('!')[1].replace(/[A-Z]/g, ''));
+                    if ( j == 0){
+                        selecao_nova.ungroup(Excel.GroupOption.byRows);
+                    }
 
+                    if (j > 1 && j < 6){
+                        selecao_nova.format.fill.color = "#E8E9EC";
+
+                    }else{
+                        selecao_nova.format.fill.color = "#FFFFFF";
+
+                    }
+                    selecao_nova.format.borders.getItem('EdgeBottom').color = "#000000";
+                    selecao_nova.format.borders.getItem('EdgeRight').color = "#000000";
+                    selecao_nova.format.borders.getItem('EdgeLeft').color = "#000000";
+                    selecao_nova.format.borders.getItem('EdgeTop').color = "#000000";
+                    selecao_nova.format.borders.getItem('InsideHorizontal').color = "#000000";
+                    selecao_nova.format.borders.getItem('InsideVertical').color = "#000000";
+                }     
+
+
+                
+                let cabecalho = context.workbook.worksheets.getItem(id.precificacao).getRange(tabelas[indexTabela - 1].kit[i].linha + ':' + tabelas[indexTabela - 1].kit[i].linha);
+                cabecalho.delete("Up");
+                await context.sync();
+
+
+                await atualizaArrayTabelas();
+                await renumerar();
+
+                await context.sync();
+ 
+                return
+            }
         }
 
+
+
+        //valida se a linha inicial está dentro de um kit e a linha final fora desse kit
+        //se verdadeiro, retorna -1
+        for (i in tabelas[indexTabela - 1].kit){
+            if ((kit.inicial >= tabelas[indexTabela - 1].kit[i].linha ) &&
+                (kit.inicial <= tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens) &&
+                 kit.final > tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens){
+                console.log(11)
+                return -1
+            }
+        }
+        
+        //valida se a linha final está dentro de um kit e a linha inicial fora desse kit
+        //se verdadeiro, retorna -1
+        for (i in tabelas[indexTabela - 1].kit){
+            if (kit.inicial < tabelas[indexTabela - 1].kit[i].linha && //linha inicial acima do cabeçalho
+                (kit.final <= tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens) && //linha final acima do último subitem
+                (kit.final >= tabelas[indexTabela - 1].kit[i].linha)){ //linha final abaido do cabeçalho
+                    console.log(22)
+                    return -1
+            }
+        }
 
         //valdar se o range está contido em alguma tabela:
         //1 - identificar se a primeira linha está em alguma tabela e qual o index dessa tabela
         //2 - identificar se a ultima linha do range esta na mesma tabela                    
         //a primeira linha do range do kit deve ser pelo menos a segunda linha da tabela (1.2) e no máximo a penúltima linha (pois a última é o subtotal)
-        if ((tabelas[indexTabela - 1].linha_ini + 3) <= kit.linha_ini  
-            && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.linha_ini
-            && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.linha_fin ){
+        if ((tabelas[indexTabela - 1].linha_ini + 3) <= kit.inicial  
+            && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.inicial
+            && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.final ){
                 //console.log("Seleção OK");
                 //agrupa as células
                 range.group(Excel.GroupOption.byRows);
@@ -560,8 +619,8 @@ async function getCellProperties(address) {
                 for (i in colunas){
 
                     var subitens = context.workbook.worksheets.getItem("Precificação").getRange(
-                        colunas[i].ini + kit.linha_ini.toString() + ":" +
-                        colunas[i].fin + kit.linha_fin.toString()  );
+                        colunas[i].ini + kit.inicial.toString() + ":" +
+                        colunas[i].fin + kit.final.toString()  );
                     subitens.format.fill.color = "#D9D9D9";
                     subitens.format.borders.getItem('EdgeBottom').color = "#000000";
                     subitens.format.borders.getItem('EdgeRight').color = "#000000";
@@ -575,8 +634,8 @@ async function getCellProperties(address) {
                 for (i in colunas){
                     if (i > 0){
                         var head = context.workbook.worksheets.getItem("Precificação").getRange(
-                            colunas[i].ini + (kit.linha_ini - 1).toString() + ":" +
-                            colunas[i].fin + (kit.linha_ini - 1).toString()  );
+                            colunas[i].ini + (kit.inicial - 1).toString() + ":" +
+                            colunas[i].fin + (kit.inicial - 1).toString()  );
                         
                         head.format.font.color = "#203764";
                         head.format.font.bold = true;
@@ -586,100 +645,100 @@ async function getCellProperties(address) {
                 //ARRUMA A borda superior da abaixo do kit---------------------------------
                 for (i in colunas){
                     var subitens = context.workbook.worksheets.getItem("Precificação").getRange(
-                        colunas[i].ini + (kit.linha_fin + 1).toString() + ":" +
-                        colunas[i].fin + (kit.linha_fin + 1).toString()  );
+                        colunas[i].ini + (kit.final + 1).toString() + ":" +
+                        colunas[i].fin + (kit.final + 1).toString()  );
                     subitens.format.borders.getItem('EdgeTop').color = "#000000";
                 }
 
                 //formulas do cabeçalho do kit
                 //valor de venda unitario
                 var celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                   "J" + (kit.linha_ini - 1).toString() + ":" +
-                   "J" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.linha_ini}:K${kit.linha_fin})/qtde,0)`]];
+                   "J" + (kit.inicial - 1).toString() + ":" +
+                   "J" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`]];
 
                 //valor de venda total do item
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "K" + (kit.linha_ini - 1).toString() + ":" +
-                    "K" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.linha_ini}:K${kit.linha_fin})/qtde,0)*qtde`]];
+                    "K" + (kit.inicial - 1).toString() + ":" +
+                    "K" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`]];
 
                 //moeda
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "P" + (kit.linha_ini - 1).toString() + ":" +
-                    "P" + (kit.linha_ini - 1 ).toString());
+                    "P" + (kit.inicial - 1).toString() + ":" +
+                    "P" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
                 
                 //valor custo unitario
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "Q" + (kit.linha_ini - 1).toString() + ":" +
-                    "Q" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,R${kit.linha_ini}:R${kit.linha_fin})/qtde,0)`]];
+                    "Q" + (kit.inicial - 1).toString() + ":" +
+                    "Q" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`]];
                 
                 //valor custo total
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "R" + (kit.linha_ini - 1).toString() + ":" +
-                    "R" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror((SUBTOTAL(9,R${kit.linha_ini}:R${kit.linha_fin})/qtde)*qtde,0)`]];
+                    "R" + (kit.inicial - 1).toString() + ":" +
+                    "R" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "T" + (kit.linha_ini - 1).toString() + ":" +
-                    "T" + (kit.linha_ini - 1 ).toString());
+                    "T" + (kit.inicial - 1).toString() + ":" +
+                    "T" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "V" + (kit.linha_ini - 1).toString() + ":" +
-                    "V" + (kit.linha_ini - 1 ).toString());
+                    "V" + (kit.inicial - 1).toString() + ":" +
+                    "V" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "W" + (kit.linha_ini - 1).toString() + ":" +
-                    "W" + (kit.linha_ini - 1 ).toString());
+                    "W" + (kit.inicial - 1).toString() + ":" +
+                    "W" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "Y" + (kit.linha_ini - 1).toString() + ":" +
-                    "Y" + (kit.linha_ini - 1 ).toString());
+                    "Y" + (kit.inicial - 1).toString() + ":" +
+                    "Y" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "Z" + (kit.linha_ini - 1).toString() + ":" +
-                    "Z" + (kit.linha_ini - 1 ).toString());
+                    "Z" + (kit.inicial - 1).toString() + ":" +
+                    "Z" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AA" + (kit.linha_ini - 1).toString() + ":" +
-                    "AA" + (kit.linha_ini - 1 ).toString());
+                    "AA" + (kit.inicial - 1).toString() + ":" +
+                    "AA" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AB" + (kit.linha_ini - 1).toString() + ":" +
-                    "AB" + (kit.linha_ini - 1 ).toString());
+                    "AB" + (kit.inicial - 1).toString() + ":" +
+                    "AB" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
                 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AE" + (kit.linha_ini - 1).toString() + ":" +
-                    "AE" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,AF${kit.linha_ini}:AF${kit.linha_fin})/qtde,0)`]];
+                    "AE" + (kit.inicial - 1).toString() + ":" +
+                    "AE" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror(SUBTOTAL(9,AF${kit.inicial}:AF${kit.final})/qtde,0)`]];
                                 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AF" + (kit.linha_ini - 1).toString() + ":" +
-                    "AF" + (kit.linha_ini - 1 ).toString());
-                    celula.formulas = [[`=iferror((SUBTOTAL(9,AF${kit.linha_ini}:AF${kit.linha_fin})/qtde)*qtde,0)`]];
+                    "AF" + (kit.inicial - 1).toString() + ":" +
+                    "AF" + (kit.inicial - 1 ).toString());
+                    celula.formulas = [[`=iferror((SUBTOTAL(9,AF${kit.inicial}:AF${kit.final})/qtde)*qtde,0)`]];
                                 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AH" + (kit.linha_ini - 1).toString() + ":" +
-                    "AH" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,AI${kit.linha_ini}:AI${kit.linha_fin})/qtde,0)`]];
+                    "AH" + (kit.inicial - 1).toString() + ":" +
+                    "AH" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror(SUBTOTAL(9,AI${kit.inicial}:AI${kit.final})/qtde,0)`]];
 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AI" + (kit.linha_ini - 1).toString() + ":" +
-                    "AI" + (kit.linha_ini - 1 ).toString());
-                celula.formulas = [[`=iferror((SUBTOTAL(9,AI${kit.linha_ini}:AI${kit.linha_fin})/qtde)*qtde,0)`]];
+                    "AI" + (kit.inicial - 1).toString() + ":" +
+                    "AI" + (kit.inicial - 1 ).toString());
+                celula.formulas = [[`=iferror((SUBTOTAL(9,AI${kit.inicial}:AI${kit.final})/qtde)*qtde,0)`]];
                 
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
-                    "AK" + (kit.linha_ini - 1).toString() + ":" +
-                    "AK" + (kit.linha_ini - 1 ).toString());
+                    "AK" + (kit.inicial - 1).toString() + ":" +
+                    "AK" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
                 await context.sync()
 
@@ -824,7 +883,7 @@ String.prototype.extenso = function(c){
 async function renumerar (){
     //atualizar index tabelas
     await atualizaArrayTabelas();
-
+    
     //criar array vazio para numeros
     var numeracao = [[]];
     var celula = {};
@@ -894,14 +953,14 @@ async function renumerar (){
     }
     //return numeracao;
 
-    await Excel.run(async (context)=>{
+    return await Excel.run(async (context)=>{
         const ws = context.workbook.worksheets.getItem("Precificação");
         var  range = ws.getRange(coluna.concat(primeiraLinha, ':', coluna, ultimaLinha)).load("values");
         //await context.sync();
     
         let novosvalores = numeracao;
         range.values = novosvalores;
-        await context.sync();
+        return await context.sync();
     });
         
     //se a célula for branca e != da última linha, corresponde a um item
