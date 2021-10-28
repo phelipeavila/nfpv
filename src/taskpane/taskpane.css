@@ -447,7 +447,7 @@ li:hover a:hover{
 
 
 
-#btn-mvl-sheet, #btn-mvr-sheet, #btn-add-sheet-sv, #btn-add-sheet-br, #btn-rem-sheet-sv{
+#btn-mvl-sheet, #btn-mvr-sheet, #btn-add-sheet-sv, #btn-add-sheet-br, #btn-rem-sheet-sv, #btn-bloquear-edicao{
     background-color: turquoise;
     border-color: turquoise;
     border-style: none;
@@ -483,4 +483,9 @@ li:hover a:hover{
 
 #btnRemoverLinha:active, #btnContrib:active, #btnKit:active, #btnTabela:active, #btnLinha:active, #btn-add-sheet-sv:active, #btn-add-sheet-br:active, #btn-rem-sheet-sv:active, #btn-mvl-sheet:active, #btn-mvr-sheet:active{
     border-style: inset;
+}
+
+#btn-bloquear-edicao:disabled{
+    background-color: rgb(109, 176, 170);
+    border-color: 	rgb(109, 176, 170);
 }

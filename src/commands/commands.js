@@ -19,6 +19,7 @@ function action(event) {
 }
 
 // The global variable
+var perfil = -1;
 var g = {};
 var p = {};
 var trib = {};

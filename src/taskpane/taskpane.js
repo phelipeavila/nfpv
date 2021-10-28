@@ -85,7 +85,7 @@ Office.initialize = () => {
     document.getElementById("inputUFDestino").onchange = atualizaMargem;
     document.getElementById("checkGoiania").onchange = atualizaMargem;
     document.getElementById("checkICMS").onchange = atualizaMargem;
-    document.getElementById("btn-login").onclick = hideFields;
+    document.getElementById("btn-login").onclick = mostraOsPermitidos;
     document.getElementById("btn-add-sheet-sv").onclick = copiarPlanilhaSV;
     document.getElementById("btn-add-sheet-br").onclick = novaPlanilhaCustomizada;
     document.getElementById("btn-rem-sheet-sv").onclick = removePlanilhaSV;
@@ -93,9 +93,7 @@ Office.initialize = () => {
     document.getElementById("btnCronograma").onclick = cronograma;
     document.getElementById("btnDI").onclick = copiaTabelaParaDI;
     document.getElementById("input-list-planilha").onkeyup = planilhaSV;
-    document.getElementById("a-cambio").onclick = mostraCambio;
-    document.getElementById("a-edicao").onclick = mostraEdicao;
-    document.getElementById("a-margens").onclick = mostraMargens;
+
     document.getElementById("btn-mvr-sheet").onclick = moveParaDireita;
     document.getElementById("btn-mvl-sheet").onclick = moveParaEsquerda;
     //document.getElementById("a-implantacao").onclick = mostraImplantacao;
@@ -143,6 +141,7 @@ function btnStorageChanged() {
 }
 
 async function comeceAqui() {
+    escondeCampos();
     //buscar parametros da planilha
     await atualizaParametros();
     //buscar tributos da planilha
@@ -539,30 +538,92 @@ async function getProfile(login = document.getElementById('input-passwd').value)
   return perm;
 }
 
-async function hideFields() {
-  var perfil = await getProfile();
+//esconde todos os campos, com exceção do login
+function escondeCampos(){
+  document.getElementById("perm-login").hidden = false;
+  document.getElementById("perm-cambio").hidden = true;
+  document.getElementById("perm-faturamento").hidden = true;
+  document.getElementById("perm-margens-comissoes").hidden = true;
+  document.getElementById("perm-formatar").hidden = true;
+  document.getElementById("perm-implantacao").hidden = true;
+  document.getElementById("nav-ul").hidden = true;
+
+}
+
+async function mostraOsPermitidos(){
+  //document.getElementById("perm-login").hidden = true;
+  perfil = await getProfile();
   var permissoes = await getPermissions(perfil);
 
   if(perfil == -1){
     console.log("usuário inválido")
     return -1;
   }
+  
+  //atualiza a nav-bar adicionando os elementos da nav-ul
+  //<li id="li-edicao" class="nav-item"><a id="a-edicao" href="#">Edição</a></li>
+  //<li id="li-cambio" class="nav-item"><a id="a-cambio" href="#" style="font-size: 0.8rem;">Câmbio e<br> Faturamento</a></li>
+  //<li id="li-margens" class="nav-item"><a id="a-margens" href="#">Margens</a></li>
+
+  let li = (function (nome) {
+
+    let listItem = document.createElement('li');
+    let link = document.createElement('a');
+
+    link.id = 'a-' + nome;
+    
+    switch (nome) {
+      case 'edicao':
+        link.text = 'Edição'
+        break;
+      case 'margens':
+        link.text = 'Margens'
+        break;
+      case 'cambio':
+        link.textContent = 'Câmbio e' + '\n' + 'Faturamento'
+        break;
+      case 'cambio':
+        link.text = 'Implantação'
+        break;
+        
+      default:
+        break;
+    }
+
+    listItem.id = 'li-'+nome;
+    listItem.className = 'nav-item';
+    listItem.appendChild(link);
+
+    return listItem;
+
+  })
+
+
+
+
+  document.getElementById('nav-ul').appendChild(li('edicao'));
+  document.getElementById('nav-ul').appendChild(li('cambio'));
+  document.getElementById('nav-ul').appendChild(li('margens'));
+  document.getElementById("a-cambio").onclick = mostraCambio;
+  document.getElementById("a-edicao").onclick = mostraEdicao;
+  document.getElementById("a-margens").onclick = mostraMargens;
 
 
   document.getElementById("perm-all-other-fields").hidden = false;
+  document.getElementById("nav-ul").hidden = false;
   document.getElementById("perm-login").hidden = true;
 
-  document.getElementById("perm-cambio").hidden = !permissoes[1];
-  document.getElementById("perm-faturamento").hidden = !permissoes[2];
-  document.getElementById("perm-margens").hidden = !permissoes[3];
-  document.getElementById("perm-comissoes").hidden = !permissoes[3];
-  document.getElementById("perm-formatar").hidden = !permissoes[10];
+  // document.getElementById("perm-cambio").hidden = !permissoes[1];
+  // document.getElementById("perm-faturamento").hidden = !permissoes[2];
+  // document.getElementById("perm-margens").hidden = !permissoes[3];
+  // document.getElementById("perm-comissoes").hidden = !permissoes[3];
+  // document.getElementById("perm-formatar").hidden = !permissoes[10];
 
-  document.getElementById("radioCambioManual").disabled = permissoes[14];
-  document.getElementById("radioCambioData").disabled = permissoes[14];
-  document.getElementById("inputDate").disabled = permissoes[14];
-  document.getElementById("inputUSD").disabled = permissoes[14];
-  document.getElementById("inputEUR").disabled = permissoes[14];
+  // document.getElementById("radioCambioManual").disabled = permissoes[14];
+  // document.getElementById("radioCambioData").disabled = permissoes[14];
+  // document.getElementById("inputDate").disabled = permissoes[14];
+  // document.getElementById("inputUSD").disabled = permissoes[14];
+  // document.getElementById("inputEUR").disabled = permissoes[14];
 
   return permissoes;
 
@@ -585,6 +646,7 @@ async function hideFields() {
 //14 CAMBIO-LEITURA
 
 }
+
 
 
 async function atualizaListaPlanilhas(){

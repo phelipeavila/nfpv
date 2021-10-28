@@ -41,9 +41,7 @@
         <nav id="nav-bar">
 
             <ul id="nav-ul">
-                <li id="li-edicao" class="nav-item"><a id="a-edicao" href="#">Edição</a></li>
-                <li id="li-cambio" class="nav-item"><a id="a-cambio" href="#" style="font-size: 0.8rem;">Câmbio e<br> Faturamento</a></li>
-                <li id="li-margens" class="nav-item"><a id="a-margens" href="#">Margens</a></li>
+
                 <!-- <li id="li-implantacao" class="nav-item"><a id="a-implantacao" href="#">Implantação</a></li> -->
             </ul>
             
@@ -59,7 +57,7 @@
                 </div>
             </span>  <!--  FIM PERM-LOGIN  -->
             <span id="perm-all-other-fields">
-                <span id="perm-cambio">
+                <span id="perm-cambio" hidden="true">
                     <div class="div-cambio-1">
 
                             <!-- <legend >PTAX</legend> -->
@@ -79,7 +77,7 @@
 
                     </div>
                 </span>   <!--  FIM PERM-CAMBIO  -->
-                <span id="perm-faturamento">
+                <span id="perm-faturamento" hidden="true">
                     <div class="div-param-2">
 
                         <div class="div-param-4">
@@ -106,7 +104,7 @@
                         </div>
                     </div>
                 </span>     <!--  FIM PERM-FATURAMENTO  -->
-                <span id="perm-margens-comissoes">
+                <span id="perm-margens-comissoes" hidden="true">
                     <div class="div-margens-1">
                         <span id="perm-margens">
                             <div class="div-margens-2">
@@ -149,7 +147,7 @@
                         </span>      <!--  FIM PERM-COMISSOES  -->
                     </div>
                 </span>
-                <span id="perm-formatar">
+                <span id="perm-formatar" hidden="true">
                     <div class="div-format-1">
                         <div class="div-format-2">
                             <button class="btn-format" id="btnLinha"> + linha </button>
@@ -202,12 +200,12 @@
                     </div>
                     <div class="div-format-1" style="margin-top: 80px;">
                         <div class="div-format-2">
-                            <button id="btn-bloquear-edicao">Bloquear FPV</button>
+                            <button id="btn-bloquear-edicao" disabled="true">Bloquear FPV</button>
                         </div>
 
                     </div>
                 </span>     <!--  FIM PERM-FORMATAR  -->
-                <span id="perm-implantacao">
+                <span id="perm-implantacao" hidden="true">
                     <div class="div-format-1" >
                         <div class="div-format-2">
                             <!-- <input type="number" name="inputNumTabela" id="inputNumTabela"value="1" step="1" min="1"> -->
