@@ -426,7 +426,7 @@ async function atualizaParametros() {
   })
 }
 
-async function ocultaPlanilhas() {
+async function ocultaPlanilhas(ID) {
   Excel.run(async (context)=>{
 
     var workbook = context.workbook;
