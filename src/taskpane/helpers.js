@@ -253,37 +253,177 @@ async function inputCambioManualListener() {
 async function novaLinha(){
     const numLinhas = parseInt(document.getElementById("inputNumLinha").value);
     await atualizaArrayTabelas();
-    await Excel.run(async (context) =>{
+    return await Excel.run(async (context) =>{
 
-        const cell = context.workbook.getActiveCell();
-        const a = cell.getCellProperties({address: true});
+        var cell = context.workbook.getActiveCell();
+        var a = cell.getCellProperties({address: true});
         await context.sync()
-        
+
+        var linhaSelecionada = parseInt( a.value[0][0]["address"].split('!')[1].replace(/[A-Z]/g, '') );
+        console.log(linhaSelecionada);
+
         if (a.value[0][0]["address"].split('!')[0] != 'Precificação'){
             console.log('Not in sheet');
             return 0
         }
 
-        const ws = context.workbook.worksheets.getItem("Precificação");
+        const ws = context.workbook.worksheets.getItem(id.precificacao);
         var index_tabela = await estaEmTabela();
 
+
+        //se fora da tabela
         if (index_tabela == -1){
             console.log('Not in sheet');
             return "Fora de tabela";
         }
+
+        ////se dentro da tabela
+        //se nas linhas do cabeçalho -> insere no final
+        if(linhaSelecionada == tabelas[index_tabela -1].linha_ini || linhaSelecionada == tabelas[index_tabela -1].linha_ini + 1){
+            ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).insert(Excel.InsertShiftDirection.down);
+            ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).copyFrom("modelos!4:4");
+            tabelas[index_tabela - 1].linha_fin += numLinhas ;
+
+            //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
+            ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
+                       [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
+
+            console.log('se nas linhas do cabeçalho -> insere no final')
+            await context.sync();
+            await atualizaArrayTabelas();
+            await renumerar();
+            return context.sync()
+        }
+
+        //se kit
+        for (i in tabelas[index_tabela -1].kit){
+            let finalDoKit = tabelas[index_tabela -1].kit[i].linha + tabelas[index_tabela -1].kit[i].subitens ;
+            //se cabeçalho do kit -> normal acima do kit
+            if (linhaSelecionada == tabelas[index_tabela -1].kit[i].linha){
+                
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!4:4");
+
+                tabelas[index_tabela - 1].linha_fin += numLinhas ;
+                //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
+                //ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
+                //        [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
+
+                console.log('se cabeçalho do kit -> normal acima do kit')
+                await context.sync();
+                await atualizaArrayTabelas();
+                await renumerar();
+                return context.sync()
+            }
+
+            //se primeira linha -> insere sublinha e corrige fórmulas do cabeçalho do kit
+            if (linhaSelecionada == tabelas[index_tabela -1].kit[i].linha + 1){
+                let range = "";
+                console.log(`linha selecionada: ${linhaSelecionada}`)
+                console.log(`linha selecionada: ${tabelas[index_tabela -1].kit[i].linha + 1}`)
+                console.log(`final do kit: ${finalDoKit}`)
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!11:11");
+                tabelas[index_tabela - 1].linha_fin += numLinhas ;
+                tabelas[index_tabela -1].kit[i].subitens += numLinhas;
+                //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
+                //ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
+                //        [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
+
+
+                console.log('se primeira linha -> insere dentro kit')
+                await context.sync();
+
+                //ATUALIZA AS FÓRMULAS DO CABEÇALHO DO KIT
+                //valor unitário venda
+                range = "J" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,K${tabelas[index_tabela -1].kit[i].linha + 1}:K${finalDoKit + numLinhas})/qtde,0)`]]
+
+                //valor total venda
+                range = "K" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,K${tabelas[index_tabela -1].kit[i].linha + 1}:K${finalDoKit + numLinhas})/qtde,0)*qtde`]]
+
+                //contribuição
+
+
+                //valor unitário custo
+                range = "Q" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,R${tabelas[index_tabela -1].kit[i].linha + 1}:R${finalDoKit + numLinhas})/qtde,0)`]]
+
+                //valor total custo
+                range = "R" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,R${tabelas[index_tabela -1].kit[i].linha + 1}:R${finalDoKit + numLinhas})/qtde,0)*qtde`]]
+
+                //custo unitário com desconto
+                range = "AE" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AF${tabelas[index_tabela -1].kit[i].linha + 1}:AF${finalDoKit + numLinhas})/qtde,0)`]]
+
+                //custo total com desconto
+                range = "AF" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AF${tabelas[index_tabela -1].kit[i].linha + 1}:AF${finalDoKit + numLinhas})/qtde,0)*qtde`]]
+
+                //custo unitário com desconto + importação
+                range = "AH" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AI${tabelas[index_tabela -1].kit[i].linha + 1}:AI${finalDoKit + numLinhas})/qtde,0)`]]
+
+                //custo total com desconto + importação
+                range = "AI" + tabelas[index_tabela -1].kit[i].linha;
+                console.log(range)
+                ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AI${tabelas[index_tabela -1].kit[i].linha + 1}:AI${finalDoKit + numLinhas})/qtde,0)*qtde`]]
+                
+                await atualizaArrayTabelas();
+                await renumerar();
+                await context.sync();
+
+                return context.sync()
+            }
+
+            //se meio do kit -> insere sublinha
+            if (linhaSelecionada > tabelas[index_tabela -1].kit[i].linha && linhaSelecionada <= finalDoKit ){
+                console.log(`linha selecionada: ${linhaSelecionada}`)
+                console.log(`final do kit: ${finalDoKit}`)
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
+                ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!11:11");
+                tabelas[index_tabela - 1].linha_fin += numLinhas ;
+                
+                console.log('se dentro do kit -> insere dentro kit')
+                await context.sync();
+                await atualizaArrayTabelas();
+                await renumerar();
+                return context.sync()
+            }            
+
+        }
+
+
+
         
-        ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).insert(Excel.InsertShiftDirection.down);
-        ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).copyFrom("modelos!4:4");
+        ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
+        ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!4:4");
+        
+        //ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).insert(Excel.InsertShiftDirection.down);
+        //ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).copyFrom("modelos!4:4");
         tabelas[index_tabela - 1].linha_fin += numLinhas ;
 
         //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
         ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
                             [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
-         await context.sync();
+         
+         
+        await context.sync();
+        await atualizaArrayTabelas();
+        await renumerar();
+        return context.sync()
         
     })
-    await atualizaArrayTabelas();
-    await renumerar();
+
 
 }
 
@@ -369,6 +509,11 @@ async function estaEmTabela(){
 //atualiza array tabelas, que é variável global com as informações
 // das tabelas de precificação
 async function atualizaArrayTabelas() {
+    //se a função for chamada, irá excluir a variável cache para excluir linhas, para evitar exclusões acidentais 
+    paraExcluir = {
+        inicial:-1,
+        final:-1
+      }
     //pega a ultima linha da aba precificação e salva em variavel
     const ultimaCelula = await getLastCellAddress();
     var celula = {};
@@ -636,6 +781,7 @@ async function getCellProperties(address) {
                         
                         head.format.font.color = "#203764";
                         head.format.font.bold = true;
+                        head.format.borders.getItem('EdgeTop').color = "#000000";
                     }   
                 }
 
@@ -968,11 +1114,11 @@ async function calculaContribuicao(){
 
     var arrayContribuicao;
     var custoTotal = 0;
-    var linhaFinal = tabelas[tabelas.length -1].linha_fin -1;
+    var linhaFinal = tabelas[tabelas.length -1].linha_fin;
     var linhaInicial = tabelas[0].linha_ini + 2;
     //console.log(`custoTotal: ${custoTotal}`)
     var arrayCustos = await Excel.run(async (context)=>{
-        const ws = context.workbook.worksheets.getItem("Precificação");
+        const ws = context.workbook.worksheets.getItem(id.precificacao);
         var  range = ws.getRange(colunas[7].fin + linhaInicial + ":" +colunas[7].fin + linhaFinal).load("values");
         //var  range = ws.getRange("AI25").load("values");
         var custoTotal = 0;
@@ -981,6 +1127,7 @@ async function calculaContribuicao(){
     });
 
     var arrayPropriedades = await getCellProperties(colunas[7].fin + linhaInicial + ":" +colunas[7].fin + linhaFinal);
+    console.log(arrayPropriedades);
     //return arrayPropriedades;
     
 
@@ -999,14 +1146,24 @@ async function calculaContribuicao(){
                     
                     do {
                         numSubitens = numSubitens + 1;
-                    } while (arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9");
 
-                    numSubitens = numSubitens - 1;  
-                    //escreve na linha do cabeçalho do kit, coluna de contribuição
-                    //a fórmula soma as contribuições dos subitens
+                        console.log(`arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9"`)
+                        console.log(`arrayPropriedades[${parseInt(i)} + ${numSubitens}][0].format.fill.color == "#D9D9D9"`)
+                        console.log(parseFloat(arrayCustos[i][0]))
+                        console.log(arrayPropriedades.length)
 
-                    arrayCustos[i][0] = `=subtotal(9, ${colunas[1].fin + (parseInt(i) + tabelas[0].linha_ini + 3 )  + ":" + colunas[1].fin + (parseInt(i) + tabelas[0].linha_ini + 2 + numSubitens)} )`;
-                    //arrayCustos[i][0] = `=${numSubitens}`;
+                    } while ((arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9") & ((parseInt(i) + numSubitens) < arrayPropriedades.length -1));
+
+
+                        numSubitens = numSubitens - 1;  
+                        //escreve na linha do cabeçalho do kit, coluna de contribuição
+                        //a fórmula soma as contribuições dos subitens
+
+                        arrayCustos[i][0] = `=subtotal(9, ${colunas[1].fin + (parseInt(i) + tabelas[0].linha_ini + 3 )  + ":" + colunas[1].fin + (parseInt(i) + tabelas[0].linha_ini + 2 + numSubitens)} )`;
+                        //arrayCustos[i][0] = `=${numSubitens}`;
+                    
+
+                    
                 }
                 //console.log(`j: ${j}  ---   i: ${i}`)
                 //console.log(`arrayCustos[i][0]: ${arrayCustos[i][0]}`)
@@ -1747,7 +1904,6 @@ async function removePlanilhaSV(){
 
 
 async function removeLinha(){
-    await atualizaArrayTabelas();
 
     return await Excel.run(async (context) => {
 
@@ -1774,6 +1930,8 @@ async function removeLinha(){
 
             return 0
         }
+
+        await atualizaArrayTabelas();
 
         //trata o range selecionado
         for (i in tabelas){
@@ -1804,10 +1962,20 @@ async function removeLinha(){
             }else if(selecao.inicial >= tabelas[i].linha_ini +2 && selecao.final <= tabelas[i].linha_fin -1){
                 console.log('meio da tabela')
 
+                
+                
+                
+                for (j in tabelas[i].kit){
+                //se a seleção é o cabeçalho de um kit -> expandir para todo o kit
+                if(selecao.final == selecao.inicial && selecao.final == tabelas[i].kit[j].linha){
+                    selecao.final = tabelas[i].kit[j].linha + tabelas[i].kit[j].subitens;
+                    paraExcluir.inicial = selecao.inicial;
+                    paraExcluir.final = selecao.final;
+                }
+
+
                 //se a linha final está dentro de um kit -> expandir seleção para o kit todo
                 //somente se a linha inicial estiver fora do kit!!
-                for (j in tabelas[i].kit){
-
                     if (selecao.final >= tabelas[i].kit[j].linha && selecao.final < tabelas[i].kit[j].linha + tabelas[i].kit[j].subitens && selecao.inicial < tabelas[i].kit[j].linha){
                         selecao.final = tabelas[i].kit[j].linha + tabelas[i].kit[j].subitens;
                         paraExcluir.inicial = selecao.inicial;

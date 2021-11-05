@@ -428,32 +428,53 @@ async function atualizaParametros() {
 
 async function ocultaPlanilhas() {
   Excel.run(async (context)=>{
+
+    var workbook = context.workbook;
+    workbook.load("protection/protected");
+
+    await context.sync();
+      
+    if (workbook.protection.protected) {
+      workbook.protection.unprotect(SECRET);
+    }
+
     const ws = context.workbook.worksheets;
-    ws.getItem("trib").visibility = Excel.SheetVisibility.veryHidden ;
-    ws.getItem("param").visibility = Excel.SheetVisibility.veryHidden ;
-    ws.getItem("list").visibility = Excel.SheetVisibility.veryHidden ;
-    ws.getItem("modelos").visibility = Excel.SheetVisibility.veryHidden ;
-    ws.getItem("login").visibility = Excel.SheetVisibility.veryHidden ;
+    ws.getItem(ID).visibility = Excel.SheetVisibility.veryHidden ;
     
+
+    workbook.protection.protect(SECRET);
+
     await context.sync();
 
     return context;
   })
 }
 
-async function exibePlanilhas() {
+async function exibePlanilhas(ID) {
+
+
   Excel.run(async (context)=>{
+
+    var workbook = context.workbook;
+    workbook.load("protection/protected");
+
+    await context.sync();
+      
+    if (workbook.protection.protected) {
+      workbook.protection.unprotect(SECRET);
+    }
+
     const ws = context.workbook.worksheets;
-    ws.getItem("param").visibility = Excel.SheetVisibility.visible ;
-    ws.getItem("modelos").visibility = Excel.SheetVisibility.visible
-    ws.getItem("trib").visibility = Excel.SheetVisibility.visible ;
-    ws.getItem("list").visibility = Excel.SheetVisibility.visible ;
-    ws.getItem("login").visibility = Excel.SheetVisibility.visible ;
+    ws.getItem(ID).visibility = Excel.SheetVisibility.visible ;
     
+
+    workbook.protection.protect(SECRET);
+
     await context.sync();
 
     return context;
   })
+
 }
 
 async function getAllLogin(type = "") {
