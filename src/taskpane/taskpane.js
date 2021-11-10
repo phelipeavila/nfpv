@@ -222,12 +222,14 @@ async function atualizaMargem(){
         p.state.comDir = 0;
     }else{
         //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
-        if(p.state.margem < 0.1) {
+        if(p.state.margem <= 0) { // SE MARGEM <= 0%
             p.state.comDir = 0;
-        }else if (p.state.margem >= 0.1 && p.state.margem <= 0.15){
-            p.state.comDir = 0.005;
-        }else {
+        }else if (p.state.margem > 0 && p.state.margem <= 0.10){ // SE 0% < MARGEM <= 10%   ->  1%
             p.state.comDir = 0.01;
+        }else if (p.state.margem > 0.1 && p.state.margem <= 0.20){ // SE 10% < MARGEM <= 20%   ->  1%
+            p.state.comDir = 0.01;
+        }else {
+            p.state.comDir = 0.01; // SE MARGEM > 15%   ->  1 %
         }
 
     }
@@ -241,7 +243,7 @@ async function atualizaMargem(){
     }else{
         //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
         if(p.state.margem < 0.1) {
-            p.state.comCom = 0.0015;
+            p.state.comCom = 0;
         }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
             p.state.comCom = 0.01;
         }else if (p.state.margem > 0.20 && p.state.margem <= 0.30){
@@ -259,13 +261,13 @@ async function atualizaMargem(){
       }else{
           //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
           if(p.state.margem < 0.1) {
-              p.state.comPre = 0.0015;
+              p.state.comPre = 0.0025;
           }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
-              p.state.comPre = 0.0015;
+              p.state.comPre = 0.0025;
           }else if (p.state.margem > 0.20 && p.state.margem <= 0.30){
-              p.state.comPre = 0.0015;
+              p.state.comPre = 0.0025;
           }else {
-              p.state.comPre = 0.0015;
+              p.state.comPre = 0.0025;
           }
       }  
       //console.log(`COMIS. PRÉ-VENDAS: ${p.state.comPre * 100}%`)
@@ -279,13 +281,13 @@ async function atualizaMargem(){
         if(p.state.margem < 0.1) {
             p.state.comPar = 0;
         }else if (p.state.margem >= 0.1 && p.state.margem < 0.15){
-            p.state.comPar = 0.05;
+            p.state.comPar = 0.03;
         }else if (p.state.margem >= 0.15 && p.state.margem < 0.20){
-            p.state.comPar = 0.1;
+            p.state.comPar = 0.08;
         }else if (p.state.margem >= 0.20 && p.state.margem < 0.25){
-            p.state.comPar = 0.15;
+            p.state.comPar = 0.12;
         }else {
-            p.state.comPar = 0.2;
+            p.state.comPar = 0.15;
         }
     }  
     //console.log(`COMIS. PARCEIRO: ${p.state.comPar * 100}%`)
