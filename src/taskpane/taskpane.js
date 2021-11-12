@@ -154,13 +154,29 @@ async function comeceAqui() {
 
     await Excel.run(async (context) => {
       var workbook = context.workbook;
-      workbook.load("protection/protected");
+      var sheet = workbook.worksheets.getItem(id.precificacao)
+      var isFPV = true;
+
+
+      try {
+        sheet.load("name")
+        await context.sync()  
+      } catch (error) {
+        console.log("não é FPV")
+        isFPV = false;
+      }
+      
+      if (isFPV){
+        workbook.load("protection/protected");
+        await context.sync()  
+
+        if (!workbook.protection.protected) {
+          workbook.protection.protect(SECRET);
+         }
+      }
+
   
-      return context.sync().then(function() {
-          if (!workbook.protection.protected) {
-              workbook.protection.protect(SECRET);
-          }
-      });
+      return context.sync();
       
     });
     
