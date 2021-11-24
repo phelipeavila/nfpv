@@ -1,0 +1,58 @@
+{
+  "acessos" : 
+  {
+        "prevendas" : {
+            "adm": false,
+            "cambio-w": true,
+            "cambio-r": false,
+            "faturamento": true,
+            "margem": true,
+            "txadm": true,
+            "svterc": true,
+            "diretoria": true,
+            "comercial": true,
+            "parceiro": true,
+            "prevendas": true,
+            "formatar": true,
+            "resumo": false,
+            "siecon": false,
+            "cronograma": false
+        },
+            "posvendas" : {
+                "adm": false,
+                "cambio-w": false,
+                "cambio-r": true,
+                "faturamento": false,
+                "margem": false,
+                "txadm": false,
+                "svterc": false,
+                "diretoria": false,
+                "comercial": false,
+                "parceiro": false,
+                "prevendas": false,
+                "formatar": false,
+                "resumo": false,
+                "siecon": true,
+                "cronograma": true
+            },
+            "comercial" : {
+                "adm": false,
+                "cambio-w": false,
+                "cambio-r": true,
+                "faturamento": false,
+                "margem": false,
+                "txadm": false,
+                "svterc": false,
+                "diretoria": false,
+                "comercial": false,
+                "parceiro": false,
+                "prevendas": false,
+                "formatar": false,
+                "resumo": false,
+                "siecon": true,
+                "cronograma": true
+            }
+  }
+  
+}
+
