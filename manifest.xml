@@ -3,11 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
   xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" 
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
-  <Id>00d559b8-5760-4756-ab89-dee3a8ef4cf2</Id>
+  <Id>6ba05aa7-a64d-4e17-9306-dfb1000b1ab0</Id>
   <Version>1.0.0.1</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>tecno.it</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Formação de preço de venda"/>
+  <DisplayName DefaultValue="DEV - Formação de preço de venda"/>
   <Description DefaultValue="Formação de preço de venda."/>
   <IconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-80.png"/>
@@ -99,9 +99,9 @@
         <bt:Url id="Shared.Url" DefaultValue="https://localhost:3000/src/taskpane/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="Functions.Namespace" DefaultValue="TIT"/>
+        <bt:String id="Functions.Namespace" DefaultValue="TITDEV"/>
         <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="tecno.it"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="tit.dev"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="FPV - teste"/>
       </bt:ShortStrings>
       <bt:LongStrings>
