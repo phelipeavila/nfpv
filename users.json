@@ -2,6 +2,7 @@
   "acessos" : 
   {
          "prevendas" : { 
+            "perfil": "prevendas",
             "nav-edicao": true,
             "nav-faturamento": true,
             "nav-margens": true,
@@ -17,7 +18,25 @@
             "cronograma": false,
             "cadastros": false
         },
-        "posvendas" : {
+        "posvendas1" : {
+            "perfil": "implantacao",
+            "nav-edicao": false,
+            "nav-faturamento": true,
+            "nav-margens": false,
+            "nav-posvenda": true,
+            "edicao-formatar-planilha": false,
+            "faturamento-so-leitura": true,
+            "faturamento-escrita": false,
+            "margens": false,
+            "comissoes": false,
+            "faturamento": false,
+            "resumo": true,
+            "siecon": true,
+            "cronograma": true,
+            "cadastros": false
+        },
+        "posvendas2" : {
+            "perfil": "compras",
             "nav-edicao": false,
             "nav-faturamento": true,
             "nav-margens": false,
@@ -34,6 +53,7 @@
             "cadastros": false
         },
         "comercial" : {
+            "perfil": "comercial",
             "nav-edicao": true,
             "nav-faturamento": true,
             "nav-margens": true,
@@ -50,6 +70,7 @@
             "cadastros": false
         },
         "diretoria" : {
+            "perfil": "administrador",
             "nav-edicao": true,
             "nav-faturamento": true,
             "nav-margens": true,
