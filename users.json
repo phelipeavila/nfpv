@@ -1,7 +1,7 @@
 {
   "acessos" : 
   {
-        "prevendas" : {
+         "prevendas" : { 
             "nav-edicao": true,
             "nav-faturamento": true,
             "nav-margens": true,
@@ -14,38 +14,57 @@
             "faturamento": true,
             "resumo": false,
             "siecon": false,
-            "cronograma": false
+            "cronograma": false,
+            "cadastros": false
         },
-            "posvendas" : {
-                "nav-edicao": false,
-                "nav-faturamento": true,
-                "nav-margens": false,
-                "nav-posvenda": true,
-                "edicao-formatar-planilha": false,
-                "faturamento-so-leitura": true,
-                "faturamento-escrita": false,
-                "margens": false,
-                "comissoes": false,
-                "faturamento": false,
-                "resumo": true,
-                "siecon": true,
-                "cronograma": true
-            },
-            "comercial" : {
-                "nav-edicao": false,
-                "nav-faturamento": false,
-                "nav-margens": false,
-                "nav-posvenda": false,
-                "edicao-formatar-planilha": false,
-                "faturamento-so-leitura": false,
-                "faturamento-escrita": false,
-                "margens": false,
-                "comissoes": false,
-                "faturamento": false,
-                "resumo": false,
-                "siecon": false,
-                "cronograma": false
-            }
+        "posvendas" : {
+            "nav-edicao": false,
+            "nav-faturamento": true,
+            "nav-margens": false,
+            "nav-posvenda": true,
+            "edicao-formatar-planilha": false,
+            "faturamento-so-leitura": true,
+            "faturamento-escrita": false,
+            "margens": false,
+            "comissoes": false,
+            "faturamento": false,
+            "resumo": true,
+            "siecon": true,
+            "cronograma": true,
+            "cadastros": false
+        },
+        "comercial" : {
+            "nav-edicao": true,
+            "nav-faturamento": true,
+            "nav-margens": true,
+            "nav-posvenda": false,
+            "edicao-formatar-planilha": true,
+            "faturamento-so-leitura": false,
+            "faturamento-escrita": true,
+            "margens": true,
+            "comissoes": true,
+            "faturamento": true,
+            "resumo": false,
+            "siecon": false,
+            "cronograma": false,
+            "cadastros": false
+        },
+        "diretoria" : {
+            "nav-edicao": true,
+            "nav-faturamento": true,
+            "nav-margens": true,
+            "nav-posvenda": false,
+            "edicao-formatar-planilha": true,
+            "faturamento-so-leitura": false,
+            "faturamento-escrita": true,
+            "margens": true,
+            "comissoes": true,
+            "faturamento": true,
+            "resumo": true,
+            "siecon": true,
+            "cronograma": true,
+            "cadastros": true
+        }
   }
   
 }
