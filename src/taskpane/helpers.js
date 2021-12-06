@@ -43,6 +43,12 @@ function getValueForKey(key) {
     return answer;
 }
 
+function log(string){
+    if (DEBUG){
+        console.log(string);
+    }
+}
+
 
 //essa função é ativada sempre que o radio for alterado (onchange)
 function radioListener(){
