@@ -101,6 +101,14 @@ Office.initialize = () => {
     //document.getElementById("input-list-planilha-br").onkeyup = planilhaBR;
 
     
+    //esse bloco de código permite que o login seja inserido pressionando ENTER
+    document.querySelector("#input-passwd").addEventListener("keyup", event => {
+      if(event.key !== "Enter") return; // Use `.key` instead.
+      document.querySelector("#btn-login").click(); // Things you want to do.
+      event.preventDefault(); // No need to `return false;`.
+  });
+
+    
 
     comeceAqui();
     //exibePlanilhas()
