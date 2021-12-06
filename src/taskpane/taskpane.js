@@ -100,7 +100,7 @@ Office.initialize = () => {
 
     //document.getElementById("input-list-planilha-br").onkeyup = planilhaBR;
 
-    
+
     //esse bloco de código permite que o login seja inserido pressionando ENTER
     document.querySelector("#input-passwd").addEventListener("keyup", event => {
       if(event.key !== "Enter") return; // Use `.key` instead.
@@ -170,7 +170,7 @@ async function comeceAqui() {
         sheet.load("name")
         await context.sync()  
       } catch (error) {
-        console.log("não é FPV")
+        log("não é FPV")
         isFPV = false;
       }
       
@@ -237,15 +237,15 @@ async function atualizaMargem(){
     p.state.destGoiania = document.getElementById('checkGoiania').checked;
     p.state.zerarICMS = document.getElementById('checkICMS').checked;
 
-    //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
+    //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
     
     
     //calcula comissao diretoria
     if (!p.state.aplicarComDir) {
-        //console.log("FALSE")
+        //log("FALSE")
         p.state.comDir = 0;
     }else{
-        //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
+        //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
         if(p.state.margem <= 0) { // SE MARGEM <= 0%
             p.state.comDir = 0;
         }else if (p.state.margem > 0 && p.state.margem <= 0.10){ // SE 0% < MARGEM <= 10%   ->  1%
@@ -257,15 +257,15 @@ async function atualizaMargem(){
         }
 
     }
-   // console.log(`COMIS. DIRETORIA: ${p.state.comDir * 100}%`)
+   // log(`COMIS. DIRETORIA: ${p.state.comDir * 100}%`)
 
 
     //calcula comissao comercial
     if (!p.state.aplicarComCom) {
-        //console.log("FALSE")
+        //log("FALSE")
         p.state.comCom = 0;
     }else{
-        //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
+        //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
         if(p.state.margem < 0.1) {
             p.state.comCom = 0;
         }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
@@ -276,14 +276,14 @@ async function atualizaMargem(){
             p.state.comCom = 0.03;
         }
     }
-    //console.log(`COMIS. COMERCIAL: ${p.state.comCom * 100}%`)
+    //log(`COMIS. COMERCIAL: ${p.state.comCom * 100}%`)
 
         //calcula comissao prevendas
         if (!p.state.aplicarComPre) {
-          //console.log("FALSE")
+          //log("FALSE")
           p.state.comPre = 0;
       }else{
-          //console.log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
+          //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
           if(p.state.margem < 0.1) {
               p.state.comPre = 0.0025;
           }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
@@ -294,12 +294,12 @@ async function atualizaMargem(){
               p.state.comPre = 0.0025;
           }
       }  
-      //console.log(`COMIS. PRÉ-VENDAS: ${p.state.comPre * 100}%`)
+      //log(`COMIS. PRÉ-VENDAS: ${p.state.comPre * 100}%`)
     
     //calcula comissao parceiro
 
     if (!p.state.aplicarComPar) {
-        //console.log("FALSE")
+        //log("FALSE")
         p.state.comPar = 0;
     }else{
         if(p.state.margem < 0.1) {
@@ -314,7 +314,7 @@ async function atualizaMargem(){
             p.state.comPar = 0.15;
         }
     }  
-    //console.log(`COMIS. PARCEIRO: ${p.state.comPar * 100}%`)
+    //log(`COMIS. PARCEIRO: ${p.state.comPar * 100}%`)
 
     if (p.state.ufDest != 'GO') {
       document.getElementById('checkGoiania').disabled = true;
@@ -380,7 +380,7 @@ async function atualizaTributos() {
     //                            destino        x      origem
     //trib.state.tabelaIcms[listUF.indexOf("PB")][listUF.indexOf("RJ")]
 
-    //console.log( trib.state.tabelaIcms);
+    //log( trib.state.tabelaIcms);
 
     return context;
   })
@@ -560,29 +560,50 @@ async function getPermissions(perfil) {
     default:
       break;
   }
-  console.log(perfil)
+  log(perfil)
   return permissoes;
 }
 
 
 //retorna o código de permissão (10, 20, 30, 40 ou 50). Se der erro, retorna -1.
-async function getProfile(login = document.getElementById('input-passwd').value) {
-  var base = await getAllLogin();
-  var users = [];
-  var permis = [];
+async function getProfile(inputLogin = document.getElementById('input-passwd').value) {
+  // var base = await getAllLogin();
+  // var users = [];
+  // var permis = [];
 
-  for (i in base){
-    users[i] = base[i][0];
-    permis[i] = base[i][1];
-  }
+  // for (i in base){
+  //   users[i] = base[i][0];
+  //   permis[i] = base[i][1];
+  // }
   
-  let perm = permis[users.indexOf(login)];
+  // let perm = permis[users.indexOf(login)];
 
-  if (typeof perm == 'undefined' || perm == ''){
-    return -1;
-  }
-  console.log(login)
-  return perm;
+  // if (typeof perm == 'undefined' || perm == ''){
+  //   return -1;
+  // }
+  // log(login)
+  // return perm;
+
+  var get_login = (async function(){
+    let obj = null;
+    let url = "https://phelipeavila.github.io/nfpv/users.json";
+
+    try {
+        obj = await (await fetch(url)).json();
+    } catch(e) {
+        log('error');
+        log(url);
+    }
+    return obj;
+  });
+
+
+  let login = await get_login(); //JSON com todos os logins e acessos
+  
+  if ( !login.acessos.hasOwnProperty(inputLogin)) return -1;
+
+  return 10;
+
 }
 
 //esconde todos os campos, com exceção do login
@@ -595,17 +616,43 @@ function escondeCampos(){
   document.getElementById("perm-implantacao").hidden = true;
   document.getElementById("nav-ul").hidden = true;
 
+
+
 }
 
-async function mostraOsPermitidos(){
-  //document.getElementById("perm-login").hidden = true;
-  perfil = await getProfile();
-  var permissoes = await getPermissions(perfil);
 
-  if(perfil == -1){
-    console.log("usuário inválido")
-    return -1;
-  }
+//QUANDO CLICAR NO BOTÃO DE LOGIN CRIA A NAVBAR
+async function mostraOsPermitidos(){
+  
+
+  var inputLogin = document.getElementById('input-passwd').value; //obtem o input do passwd no HTML
+  
+  //pega o JSON com os logins e permissoes
+    var get_login = (async function(){
+      let obj = null;
+      let url = "https://phelipeavila.github.io/nfpv/users.json";
+
+      try {
+          obj = await (await fetch(url)).json();
+      } catch(e) {
+          log('error');
+          log(url);
+      }
+      return obj;
+    });
+
+
+    let login = await get_login(); //JSON com todos os logins e acessos
+  log(inputLogin);
+  log(login.acessos.hasOwnProperty(inputLogin));
+  
+
+  if ( !login.usuarios.hasOwnProperty(inputLogin)) return -1; //se o login digitado não está no JSON, retorna -1
+
+  perfil = login.usuarios[inputLogin];
+
+  var permissoes = login.acessos[perfil]
+
   
   //atualiza a nav-bar adicionando os elementos da nav-ul
   //<li id="li-edicao" class="nav-item"><a id="a-edicao" href="#">Edição</a></li>
@@ -629,8 +676,11 @@ async function mostraOsPermitidos(){
       case 'cambio':
         link.textContent = 'Câmbio e' + '\n' + 'Faturamento'
         break;
-      case 'cambio':
-        link.text = 'Implantação'
+      case 'posvenda':
+        link.text = 'Pós Venda'
+        break;
+      case 'config':
+        link.text = 'Config.'
         break;
         
       default:
@@ -645,52 +695,36 @@ async function mostraOsPermitidos(){
 
   })
 
+  
 
+  if (login.acessos[perfil]['nav-edicao']){
+    document.getElementById('nav-ul').appendChild(li('edicao'));
+    document.getElementById("a-edicao").onclick = mostraEdicao;
+  }
 
-
-  document.getElementById('nav-ul').appendChild(li('edicao'));
-  document.getElementById('nav-ul').appendChild(li('cambio'));
-  document.getElementById('nav-ul').appendChild(li('margens'));
-  document.getElementById("a-cambio").onclick = mostraCambio;
-  document.getElementById("a-edicao").onclick = mostraEdicao;
-  document.getElementById("a-margens").onclick = mostraMargens;
+  if (login.acessos[perfil]['nav-faturamento']){
+    document.getElementById('nav-ul').appendChild(li('cambio'));
+    document.getElementById("a-cambio").onclick = mostraCambio;
+  }
+  if (login.acessos[perfil]['nav-margens']){
+    document.getElementById('nav-ul').appendChild(li('margens'));
+    document.getElementById("a-margens").onclick = mostraMargens;
+  }
+  if (login.acessos[perfil]['nav-posvenda']){
+    document.getElementById('nav-ul').appendChild(li('posvenda'));
+    document.getElementById("a-posvenda").onclick = mostraPosvenda;
+  }
+  if (login.acessos[perfil]['nav-config']){
+    document.getElementById('nav-ul').appendChild(li('config'));
+    document.getElementById("a-config").onclick = mostraPosvenda;
+  }
 
 
   document.getElementById("perm-all-other-fields").hidden = false;
   document.getElementById("nav-ul").hidden = false;
   document.getElementById("perm-login").hidden = true;
 
-  // document.getElementById("perm-cambio").hidden = !permissoes[1];
-  // document.getElementById("perm-faturamento").hidden = !permissoes[2];
-  // document.getElementById("perm-margens").hidden = !permissoes[3];
-  // document.getElementById("perm-comissoes").hidden = !permissoes[3];
-  // document.getElementById("perm-formatar").hidden = !permissoes[10];
-
-  // document.getElementById("radioCambioManual").disabled = permissoes[14];
-  // document.getElementById("radioCambioData").disabled = permissoes[14];
-  // document.getElementById("inputDate").disabled = permissoes[14];
-  // document.getElementById("inputUSD").disabled = permissoes[14];
-  // document.getElementById("inputEUR").disabled = permissoes[14];
-
   return permissoes;
-
-// legenda de permissões
-//
-//00 ADM
-//01 CAMBIO
-//02 FATURAMENTO
-//03 MARGEM
-//04 TXADM
-//05 SVTERC
-//06 DIRETORIA
-//07 COMERCIAL
-//08 PARCEIRO
-//09 PREVENDAS
-//10 FORMATAR PLANILHAS
-//11 RESUMO
-//12 SIECON
-//13 CRONOGRAMA
-//14 CAMBIO-LEITURA
 
 }
 
@@ -728,7 +762,7 @@ async function atualizaListaPlanilhas(){
 function planilhaSV(){
   const input = document.getElementById("input-list-planilha").value;
   const datalist = document.getElementById("datalist-planilha").options;
-  //console.log(inputSV.value);
+  //log(inputSV.value);
 
   if (input == "SV" || input == "param" || input == "list" || input == "login" || input == "trib" ||  input == "extenso" ||  input == "Precificação" || input == "CRONOGRAMA-COMPRAS" || input == "ANEXO IV" || input == "modelos" || input == "DESPESAS-INDIRETAS" ){
     document.getElementById("btn-add-sheet-sv").disabled = true;
@@ -791,26 +825,64 @@ function addOptionToList (valor, customizada = false){
   if ( !existeNaLista (valor)){
     document.getElementById('datalist-planilha').appendChild(node)
   }else{
-    console.log("já existe")
+    log("já existe")
   }
 }
 
+//mostra nav-li "Câmbio e Faturamento"
+async function mostraCambio(){
 
-function mostraCambio(){
+
+  //pega o JSON com os logins e permissoes
+  var get_login = (async function(){
+    let obj = null;
+    let url = "https://phelipeavila.github.io/nfpv/users.json";
+
+    try {
+        obj = await (await fetch(url)).json();
+    } catch(e) {
+        log('error');
+        log(url);
+    }
+    return obj;
+  });
+
+
+  let login = await get_login(); //JSON com todos os logins e acessos
+
+
   //oculta todas os campos
   //oculta login
   document.getElementById("perm-login").hidden = true;
-  //oculta faturamento
-  document.getElementById("perm-faturamento").hidden = false;
   //oculta margens
   document.getElementById("perm-margens-comissoes").hidden = true;
-
   //oculta formatar
   document.getElementById("perm-formatar").hidden = true;
   //oculta implantacao
   document.getElementById("perm-implantacao").hidden = true;
+  
+
+
   //exibe o campo de PTAX
   document.getElementById("perm-cambio").hidden = false;
+  //exibe faturamento
+  document.getElementById("perm-faturamento").hidden = false;
+
+
+  //se o usuário tem permissão somente de leitura
+  //desabilita os campos
+  if(login.acessos[perfil]["faturamento-so-leitura"]){
+    document.getElementById("radioCambioData").disabled = true;
+    document.getElementById("inputDate").disabled = true;
+    document.getElementById("radioCambioManual").disabled = true;
+    document.getElementById("inputUSD").disabled = true;
+    document.getElementById("inputEUR").disabled = true;
+    document.getElementById("inputUFOrigem").disabled = true;
+    document.getElementById("inputUFDestino").disabled = true;
+    document.getElementById("inputTipoFaturamento").disabled = true;
+    document.getElementById("checkICMS").disabled = true;
+    document.getElementById("checkGoiania").disabled = true;
+  }
 
   var menu = document.getElementById("nav-ul");
   for (i in menu.children){
@@ -880,6 +952,34 @@ function mostraMargens(){
 
 }
 
+function mostraPosvenda(){
+  //oculta todas os campos
+  //oculta login
+  document.getElementById("perm-login").hidden = true;
+  //oculta faturamento
+  document.getElementById("perm-faturamento").hidden = true;
+  //exibe implantacao
+  document.getElementById("perm-implantacao").hidden = false;
+  //oculta o campo de PTAX
+  document.getElementById("perm-cambio").hidden = true;
+  //oculta formatar
+  document.getElementById("perm-formatar").hidden = true;
+  //oculta margens
+  document.getElementById("perm-margens-comissoes").hidden = true;
+
+
+  var menu = document.getElementById("nav-ul");
+  for (i in menu.children){
+    if (/^([0-9]+)$/.test(i)){
+      menu.children[i].style.borderBottom = ""
+    }
+    
+  }
+  menu.children["li-posvenda"].style.borderBottom = "3px solid";
+  menu.children["li-posvenda"].style.borderColor = "white";
+
+}
+
 // function openDialog() {
 //   if (dialog != null){
 //     dialog.close();
@@ -891,14 +991,14 @@ function mostraMargens(){
 //     function (result) {
 //       dialog = result.value;
 //       dialog.addEventHandler(Microsoft.Office.WebExtension.EventType.DialogMessageReceived, processMessage);
-//       console.log(result.value)
+//       log(result.value)
 //     }
 //   );
 // }
 
 // function processMessage(arg) {
 //   document.getElementById("user-name").innerHTML = arg.message;
-//   console.log(arg.message)
+//   log(arg.message)
 //   dialog.close();
 // }
 // var dialog = null;

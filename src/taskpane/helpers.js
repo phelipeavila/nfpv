@@ -1,5 +1,3 @@
-/* Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. */
-
 
 /***
  * Stores the key/value pair. Will use local storage or global variable to store
@@ -114,8 +112,8 @@ async function buscaPTAX(moeda, dataFinal = ontemStringHTML(), intervalo = 5){
     try {
         obj = await (await fetch(url)).json();
     } catch(e) {
-        console.log('error');
-        console.log(url);
+        log('error');
+        log(url);
     }
         
     return obj.value[0].cotacaoVenda;
@@ -201,7 +199,7 @@ function atualizaDivPTAX(){
             document.getElementById("inputEUR").value = p.state.euroPTAX;
         }
     }catch(e){
-        console.log("Parâmetro não carregado.");
+        log("Parâmetro não carregado.");
     }
 
     //se selecionar o radio da data, deve desabilitar os campos de input manual 
@@ -256,6 +254,23 @@ async function inputCambioManualListener() {
 
 }
 
+async function funcao(){
+    return Excel.run (async(context) =>{
+        
+        for (let i = tabelas[0].linha_ini+2; i < tabelas[tabelas.length-1].linha_fin ; i ++){
+        //for (let i = tabelas[0].linha_ini+2; i < 15 ; i ++){
+            let ws = context.workbook.worksheets.getItem(id.precificacao);
+            let range = ws.getRange(`M${i}`);
+            let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+
+            conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+            conditionalFormat.custom.format.fill.color = "#FCE4D6";
+        }
+
+        return context.sync();
+    })
+}
+
 async function novaLinha(){
     const numLinhas = parseInt(document.getElementById("inputNumLinha").value);
     await atualizaArrayTabelas();
@@ -266,10 +281,10 @@ async function novaLinha(){
         await context.sync()
 
         var linhaSelecionada = parseInt( a.value[0][0]["address"].split('!')[1].replace(/[A-Z]/g, '') );
-        console.log(linhaSelecionada);
+        log(linhaSelecionada);
 
         if (a.value[0][0]["address"].split('!')[0] != 'Precificação'){
-            console.log('Not in sheet');
+            log('Not in sheet');
             return 0
         }
 
@@ -279,7 +294,7 @@ async function novaLinha(){
 
         //se fora da tabela
         if (index_tabela == -1){
-            console.log('Not in sheet');
+            log('Not in sheet');
             return "Fora de tabela";
         }
 
@@ -288,13 +303,21 @@ async function novaLinha(){
         if(linhaSelecionada == tabelas[index_tabela -1].linha_ini || linhaSelecionada == tabelas[index_tabela -1].linha_ini + 1){
             ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).insert(Excel.InsertShiftDirection.down);
             ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).copyFrom("modelos!4:4");
+
+            for (let i = tabelas[index_tabela -1].linha_fin ; i< tabelas[index_tabela -1].linha_fin + numLinhas ; i++){
+                let range = ws.getRange(`M${i}`);
+                let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+    
+                conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+                conditionalFormat.custom.format.fill.color = "#FCE4D6";
+            }
             tabelas[index_tabela - 1].linha_fin += numLinhas ;
 
             //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
             ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
                        [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
 
-            console.log('se nas linhas do cabeçalho -> insere no final')
+            log('se nas linhas do cabeçalho -> insere no final')
             await context.sync();
             await atualizaArrayTabelas();
             await renumerar();
@@ -310,12 +333,20 @@ async function novaLinha(){
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!4:4");
 
+                for (let i = linhaSelecionada ; i< linhaSelecionada + numLinhas ; i++){
+                    let range = ws.getRange(`M${i}`);
+                    let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        
+                    conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+                    conditionalFormat.custom.format.fill.color = "#FCE4D6";
+                }
+
                 tabelas[index_tabela - 1].linha_fin += numLinhas ;
                 //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
                 //ws.getRange("K"+ tabelas[index_tabela - 1].linha_fin).formulas =
                 //        [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
 
-                console.log('se cabeçalho do kit -> normal acima do kit')
+                log('se cabeçalho do kit -> normal acima do kit')
                 await context.sync();
                 await atualizaArrayTabelas();
                 await renumerar();
@@ -325,11 +356,20 @@ async function novaLinha(){
             //se primeira linha -> insere sublinha e corrige fórmulas do cabeçalho do kit
             if (linhaSelecionada == tabelas[index_tabela -1].kit[i].linha + 1){
                 let range = "";
-                console.log(`linha selecionada: ${linhaSelecionada}`)
-                console.log(`linha selecionada: ${tabelas[index_tabela -1].kit[i].linha + 1}`)
-                console.log(`final do kit: ${finalDoKit}`)
+                log(`linha selecionada: ${linhaSelecionada}`)
+                log(`linha selecionada: ${tabelas[index_tabela -1].kit[i].linha + 1}`)
+                log(`final do kit: ${finalDoKit}`)
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!11:11");
+
+                for (let i = linhaSelecionada ; i< linhaSelecionada + numLinhas ; i++){
+                    let range = ws.getRange(`M${i}`);
+                    let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        
+                    conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+                    conditionalFormat.custom.format.fill.color = "#FCE4D6";
+                }
+
                 tabelas[index_tabela - 1].linha_fin += numLinhas ;
                 tabelas[index_tabela -1].kit[i].subitens += numLinhas;
                 //ATUALIZA A FORMULA SUBTOTAL (OBS: AQUI DEVE SER ESCRITA A FORMULA COMO EXCEL EM INGLES!! NÃO USAR PONTO-E-VIRGULA E NOMES EM PT-BR)
@@ -337,18 +377,18 @@ async function novaLinha(){
                 //        [["=SUBTOTAL(9,K" +( tabelas[index_tabela - 1].linha_ini + 2) + ":K" + (tabelas[index_tabela - 1].linha_fin - 1) + ")"]];
 
 
-                console.log('se primeira linha -> insere dentro kit')
+                log('se primeira linha -> insere dentro kit')
                 await context.sync();
 
                 //ATUALIZA AS FÓRMULAS DO CABEÇALHO DO KIT
                 //valor unitário venda
                 range = "J" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,K${tabelas[index_tabela -1].kit[i].linha + 1}:K${finalDoKit + numLinhas})/qtde,0)`]]
 
                 //valor total venda
                 range = "K" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,K${tabelas[index_tabela -1].kit[i].linha + 1}:K${finalDoKit + numLinhas})/qtde,0)*qtde`]]
 
                 //contribuição
@@ -356,32 +396,32 @@ async function novaLinha(){
 
                 //valor unitário custo
                 range = "Q" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,R${tabelas[index_tabela -1].kit[i].linha + 1}:R${finalDoKit + numLinhas})/qtde,0)`]]
 
                 //valor total custo
                 range = "R" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,R${tabelas[index_tabela -1].kit[i].linha + 1}:R${finalDoKit + numLinhas})/qtde,0)*qtde`]]
 
                 //custo unitário com desconto
                 range = "AE" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AF${tabelas[index_tabela -1].kit[i].linha + 1}:AF${finalDoKit + numLinhas})/qtde,0)`]]
 
                 //custo total com desconto
                 range = "AF" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AF${tabelas[index_tabela -1].kit[i].linha + 1}:AF${finalDoKit + numLinhas})/qtde,0)*qtde`]]
 
                 //custo unitário com desconto + importação
                 range = "AH" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AI${tabelas[index_tabela -1].kit[i].linha + 1}:AI${finalDoKit + numLinhas})/qtde,0)`]]
 
                 //custo total com desconto + importação
                 range = "AI" + tabelas[index_tabela -1].kit[i].linha;
-                console.log(range)
+                log(range)
                 ws.getRange(range).formulas = [[`=iferror(SUBTOTAL(9,AI${tabelas[index_tabela -1].kit[i].linha + 1}:AI${finalDoKit + numLinhas})/qtde,0)*qtde`]]
                 
                 await atualizaArrayTabelas();
@@ -393,13 +433,22 @@ async function novaLinha(){
 
             //se meio do kit -> insere sublinha
             if (linhaSelecionada > tabelas[index_tabela -1].kit[i].linha && linhaSelecionada <= finalDoKit ){
-                console.log(`linha selecionada: ${linhaSelecionada}`)
-                console.log(`final do kit: ${finalDoKit}`)
+                log(`linha selecionada: ${linhaSelecionada}`)
+                log(`final do kit: ${finalDoKit}`)
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
                 ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!11:11");
+
+                for (let i = linhaSelecionada ; i< linhaSelecionada + numLinhas ; i++){
+                    let range = ws.getRange(`M${i}`);
+                    let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        
+                    conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+                    conditionalFormat.custom.format.fill.color = "#FCE4D6";
+                }
+
                 tabelas[index_tabela - 1].linha_fin += numLinhas ;
                 
-                console.log('se dentro do kit -> insere dentro kit')
+                log('se dentro do kit -> insere dentro kit')
                 await context.sync();
                 await atualizaArrayTabelas();
                 await renumerar();
@@ -413,6 +462,14 @@ async function novaLinha(){
         
         ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).insert(Excel.InsertShiftDirection.down);
         ws.getRange(linhaSelecionada.toString().concat(":"+ (linhaSelecionada + numLinhas - 1))).copyFrom("modelos!4:4");
+
+        for (let i = linhaSelecionada ; i< linhaSelecionada + numLinhas ; i++){
+            let range = ws.getRange(`M${i}`);
+            let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+
+            conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+            conditionalFormat.custom.format.fill.color = "#FCE4D6";
+        }
         
         //ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).insert(Excel.InsertShiftDirection.down);
         //ws.getRange(tabelas[index_tabela -1].linha_fin.toString().concat(":"+ (tabelas[index_tabela -1].linha_fin + numLinhas -1 ))).copyFrom("modelos!4:4");
@@ -455,7 +512,7 @@ async function getLastCellAddress() {
         await context.sync();
         obj.linha = parseInt(range.address.split(':')[1].replace(/[A-Z]/g, ''));
         obj.coluna = range.address.split(':')[1].replace(/[0-9]/g, '');
-        //console.log(`The address of the used range in the worksheet is "${range.address}"`);
+        //log(`The address of the used range in the worksheet is "${range.address}"`);
         return obj;
     });
   }
@@ -531,7 +588,7 @@ async function atualizaArrayTabelas() {
     const propriedades = await getCellProperties(ultimaCelula.coluna.concat(1,':', ultimaCelula.coluna, ultimaCelula.linha));
     var numTabelas = 0;
     var indexTabela = 0;
-    //console.log(ultimaCelula.coluna);
+    //log(ultimaCelula.coluna);
     
 
     var infoTabela = { "index":0 , "num_linhas":0 , "linha_ini":0 , "linha_fin":0 };
@@ -557,8 +614,8 @@ async function atualizaArrayTabelas() {
         } 
         //conta as células internas (com itens) da tabela
         if (!celula.style.includes("Normal") & celula.format.fill.color == "#D9D9D9" & !estaNoKit){
-            //console.log(celula.address);
-            //console.log(celula.style);
+            //log(celula.address);
+            //log(celula.style);
             tabelas[numTabelas -1 ].num_linhas ++;
             tabelas[numTabelas -1 ].linha_fin = i + 2;
             tabelas[numTabelas -1 ].kit[indexKit] = {linha: i, subitens: 0};
@@ -567,8 +624,8 @@ async function atualizaArrayTabelas() {
         }
 
         if (!celula.style.includes("Normal") & celula.format.fill.color == "#D9D9D9" & estaNoKit){
-            //console.log(celula.address);
-            //console.log(celula.style);
+            //log(celula.address);
+            //log(celula.style);
             tabelas[numTabelas -1 ].num_linhas ++;
             tabelas[numTabelas -1 ].linha_fin = i + 2;
             tabelas[numTabelas -1 ].kit[indexKit].subitens ++;
@@ -580,8 +637,8 @@ async function atualizaArrayTabelas() {
         }
         
         if (!celula.style.includes("Normal") & celula.format.fill.color != "#D9D9D9"){
-            //console.log(celula.address);
-            //console.log(celula.style);
+            //log(celula.address);
+            //log(celula.style);
             tabelas[numTabelas -1 ].num_linhas ++;
             tabelas[numTabelas -1 ].linha_fin = i + 2;
             estaNoKit = false;
@@ -628,26 +685,38 @@ async function getCellProperties(address) {
   async function novaTabela() {
       await atualizaArrayTabelas()
       
-      //console.log(tabelas.length);
+      //log(tabelas.length);
 
       if (tabelas.length > 0){
           var linhaInicioNovaTabela =  tabelas[tabelas.length -1].linha_fin + 1;
       }else{
           var linhaInicioNovaTabela =  8;
       }
-      //console.log(linhaInicioNovaTabela);
+      //log(linhaInicioNovaTabela);
       let linStr = linhaInicioNovaTabela.toString().concat(":"+ (linhaInicioNovaTabela + 8));
 
       //return linStr;
 
       await Excel.run(async (context) => {
-        const sheet = context.workbook.worksheets.getItem("Precificação");
+        const sheet = context.workbook.worksheets.getItem(id.precificacao);
 
         sheet.getRange(linStr).insert(Excel.InsertShiftDirection.up);
         sheet.getRange(linStr).copyFrom("modelos!1:9");
         await context.sync();
       });
-      await atualizaArrayTabelas();           
+      await atualizaArrayTabelas();
+      await Excel.run(async (context) => {
+        const ws = context.workbook.worksheets.getItem(id.precificacao);
+
+        for (let i = tabelas[tabelas.length-1].linha_ini+2 ; i< tabelas[tabelas.length-1].linha_fin ; i++){
+            let range = ws.getRange(`M${i}`);
+            let conditionalFormat = range.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+
+            conditionalFormat.custom.rule.formulaLocal = `=SE($R$7=0;0; SE(ABS(M${i} - ARRED((AI${i}/custo_total_projeto);4)) < 0,05%; FALSO; VERDADEIRO))`;
+            conditionalFormat.custom.format.fill.color = "#FCE4D6";
+        }
+      });
+      
       await renumerar(); 
   }
 
@@ -657,7 +726,7 @@ async function getCellProperties(address) {
       var indexTabela = await estaEmTabela();
 
       if (indexTabela == -1) {
-        console.log("fora de tabelaa");
+        log("fora de tabelaa");
         return -1
       }
 
@@ -669,7 +738,7 @@ async function getCellProperties(address) {
 
         //return 0;
         
-        //console.log(range.address)
+        //log(range.address)
         var kit = await selectedRange();
 
 
@@ -735,7 +804,7 @@ async function getCellProperties(address) {
             if ((kit.inicial >= tabelas[indexTabela - 1].kit[i].linha ) &&
                 (kit.inicial <= tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens) &&
                  kit.final > tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens){
-                console.log(11)
+                log(11)
                 return -1
             }
         }
@@ -746,7 +815,7 @@ async function getCellProperties(address) {
             if (kit.inicial < tabelas[indexTabela - 1].kit[i].linha && //linha inicial acima do cabeçalho
                 (kit.final <= tabelas[indexTabela - 1].kit[i].linha + tabelas[indexTabela - 1].kit[i].subitens) && //linha final acima do último subitem
                 (kit.final >= tabelas[indexTabela - 1].kit[i].linha)){ //linha final abaido do cabeçalho
-                    console.log(22)
+                    log(22)
                     return -1
             }
         }
@@ -758,12 +827,13 @@ async function getCellProperties(address) {
         if ((tabelas[indexTabela - 1].linha_ini + 3) <= kit.inicial  
             && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.inicial
             && (tabelas[indexTabela - 1].linha_fin -1 ) >= kit.final ){
-                //console.log("Seleção OK");
+                //log("Seleção OK");
                 //agrupa as células
                 range.group(Excel.GroupOption.byRows);
                 await context.sync();
 
                 //seleciona demais células do kit e muda a formatação
+                log(`-Ajustando a formatação das linhas dos subitens`)
                 for (i in colunas){
 
                     var subitens = context.workbook.worksheets.getItem("Precificação").getRange(
@@ -779,6 +849,7 @@ async function getCellProperties(address) {
                 }              
 
                 //FORMATAÇÃO DO HEADER
+                log(`-Ajustando a formatação do Cabeçalho do kit`)
                 for (i in colunas){
                     if (i > 0){
                         var head = context.workbook.worksheets.getItem("Precificação").getRange(
@@ -792,6 +863,7 @@ async function getCellProperties(address) {
                 }
 
                 //ARRUMA A borda superior da abaixo do kit---------------------------------
+                log(`-Ajustando a borda superior abaixo do kit`)
                 for (i in colunas){
                     var subitens = context.workbook.worksheets.getItem("Precificação").getRange(
                         colunas[i].ini + (kit.final + 1).toString() + ":" +
@@ -801,96 +873,119 @@ async function getCellProperties(address) {
 
                 //formulas do cabeçalho do kit
                 //valor de venda unitario
+                log(`-Ajustando as fórmulas`)
                 var celula = context.workbook.worksheets.getItem("Precificação").getRange(
                    "J" + (kit.inicial - 1).toString() + ":" +
                    "J" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`]];
-
+                log(`${"J" + (kit.inicial - 1).toString() + ":" +"J" + (kit.inicial - 1 ).toString()}`)
+                log(`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`)
                 //valor de venda total do item
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "K" + (kit.inicial - 1).toString() + ":" +
                     "K" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`]];
-
+                log(`${"K" + (kit.inicial - 1).toString() + ":" + "K" + (kit.inicial - 1 ).toString()}`)
+                log(`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`)
                 //moeda
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "P" + (kit.inicial - 1).toString() + ":" +
                     "P" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-                
+                log(`${"P" + (kit.inicial - 1).toString() + ":" + "P" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 //valor custo unitario
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "Q" + (kit.inicial - 1).toString() + ":" +
                     "Q" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`]];
-                
+                log(`${"Q" + (kit.inicial - 1).toString() + ":" + "Q" + (kit.inicial - 1 ).toString()}`)
+                log(`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`)
                 //valor custo total
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "R" + (kit.inicial - 1).toString() + ":" +
                     "R" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`]];
-
+                log(`${"R" + (kit.inicial - 1).toString() + ":" + "R" + (kit.inicial - 1 ).toString()}`)
+                log(`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`)
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "T" + (kit.inicial - 1).toString() + ":" +
                     "T" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"T" + (kit.inicial - 1).toString() + ":" + "T" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "V" + (kit.inicial - 1).toString() + ":" +
                     "V" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"V" + (kit.inicial - 1).toString() + ":" + "V" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "W" + (kit.inicial - 1).toString() + ":" +
                     "W" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"W" + (kit.inicial - 1).toString() + ":" + "W" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "Y" + (kit.inicial - 1).toString() + ":" +
                     "Y" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"Y" + (kit.inicial - 1).toString() + ":" + "Y" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "Z" + (kit.inicial - 1).toString() + ":" +
                     "Z" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"Z" + (kit.inicial - 1).toString() + ":" + "Z" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AA" + (kit.inicial - 1).toString() + ":" +
                     "AA" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-
+                log(`${"AA" + (kit.inicial - 1).toString() + ":" + "AA" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AB" + (kit.inicial - 1).toString() + ":" +
                     "AB" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
-                
+                log(`${"AB" + (kit.inicial - 1).toString() + ":" + "AB" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AE" + (kit.inicial - 1).toString() + ":" +
                     "AE" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror(SUBTOTAL(9,AF${kit.inicial}:AF${kit.final})/qtde,0)`]];
-                                
+                log(`${"AE" + (kit.inicial - 1).toString() + ":" + "AE" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AF" + (kit.inicial - 1).toString() + ":" +
                     "AF" + (kit.inicial - 1 ).toString());
-                    celula.formulas = [[`=iferror((SUBTOTAL(9,AF${kit.inicial}:AF${kit.final})/qtde)*qtde,0)`]];
-                                
+                celula.formulas = [[`=iferror((SUBTOTAL(9,AF${kit.inicial}:AF${kit.final})/qtde)*qtde,0)`]];
+                log(`${"AF" + (kit.inicial - 1).toString() + ":" + "AF" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AH" + (kit.inicial - 1).toString() + ":" +
                     "AH" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror(SUBTOTAL(9,AI${kit.inicial}:AI${kit.final})/qtde,0)`]];
-
+                log(`${"AH" + (kit.inicial - 1).toString() + ":" + "AH" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AI" + (kit.inicial - 1).toString() + ":" +
                     "AI" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[`=iferror((SUBTOTAL(9,AI${kit.inicial}:AI${kit.final})/qtde)*qtde,0)`]];
-                
+                log(`${"AI" + (kit.inicial - 1).toString() + ":" + "AI" + (kit.inicial - 1 ).toString()}`)
+                log("")
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "AK" + (kit.inicial - 1).toString() + ":" +
                     "AK" + (kit.inicial - 1 ).toString());
                 celula.formulas = [[""]];
+                log(`${"AK" + (kit.inicial - 1).toString() + ":" + "AK" + (kit.inicial - 1 ).toString()}`)
+                log("")
+                log("início context.sync()")
                 await context.sync()
-
+                log("fim context.sync()")
+            
+            log("FIM novoKit()")
+            log("chamando renumerar()")
             await renumerar();
             return kit;
         }
@@ -898,11 +993,11 @@ async function getCellProperties(address) {
 
         //sheet.getRange(linStr).insert(Excel.InsertShiftDirection.down);
         //sheet.getRange(linStr).copyFrom("modelos!1:9");
-        console.log("fora de tabela")
+        log("fora de tabela")
         return kit;
       });
 
-      console.log("dentro tabela");
+      log("dentro tabela");
   }
 
   async function estaEmKit(){
@@ -921,7 +1016,7 @@ async function getCellProperties(address) {
         var selecao = await selectedRange();
 
         if(selecao.planilha != 'Precificação'){
-            console.log('Fora da planilha')
+            log('Fora da planilha')
             return -1
         }
 
@@ -931,14 +1026,14 @@ async function getCellProperties(address) {
             //se é a (primeira || segunda || terceira ) && (última || penúltima)
             //se entre terceira e penúltima
             if ((selecao.inicial == tabelas[i].linha_ini || selecao.inicial == tabelas[i].linha_ini + 1 || selecao.inicial == tabelas[i].linha_ini + 2) && selecao.final == tabelas[i].linha_fin){
-                console.log(`está na tabela ${tabelas[i].index}`)
+                log(`está na tabela ${tabelas[i].index}`)
                 return tabelas[i].index
                 // primeira <= selecao < última
             }else if(selecao.inicial >= tabelas[i].linha_ini && selecao.final < tabelas[i].linha_fin){
-                console.log(`está na tabela ${tabelas[i].index}`)
+                log(`está na tabela ${tabelas[i].index}`)
                 return tabelas[i].index
             }else{
-                console.log('Está fora')
+                log('Está fora')
             }
         }
         return -1
@@ -1029,6 +1124,8 @@ String.prototype.extenso = function(c){
 
 async function renumerar (){
     //atualizar index tabelas
+    log(`INÍCIO renumerar()`)
+    
     await atualizaArrayTabelas();
     
     //criar array vazio para numeros
@@ -1060,69 +1157,70 @@ async function renumerar (){
         if( linhaAtual >= tabelas[indexTabela].linha_ini &&
             linhaAtual < tabelas[indexTabela].linha_fin){
                 //se estiver dentro da tabela, valida a cor da célula
-
+                
                 if (celula.color == "#2B2E34"){ //CINZA ESCURO
                     
                     numeracao[i] = [tabelas[indexTabela].index];
-                    // console.log(linhaAtual)
-                    // console.log(numeracao[i])
+                    // log(linhaAtual)
+                    // log(numeracao[i])
                 }else if (celula.color == "#FF561C"){ //LARANJA
                     
                     numeracao[i] = ["ITEM"];
-                    // console.log(linhaAtual)
-                    // console.log(numeracao[i])
+                    // log(linhaAtual)
+                    // log(numeracao[i])
                 }else if (celula.color == "#FFFFFF" ){ //BRANCO
                     subitem = 1;
                     numeracao[i] = [tabelas[indexTabela].index.toString() + ". " + item ];
                     item ++;
-                    // console.log(linhaAtual)
-                    // console.log(numeracao[i])
+                    // log(linhaAtual)
+                    // log(numeracao[i])
                 }else if (celula.color == "#D9D9D9"){ //CINZA
                     numeracao[i] = [tabelas[indexTabela].index.toString() + "." + (item - 1) + "." + subitem];
                     subitem ++
-                    // console.log(linhaAtual)
-                    // console.log(numeracao[i])
+                    // log(linhaAtual)
+                    // log(numeracao[i])
                 }else{
                     return -2;
                 }
-        }else if (linhaAtual == tabelas[indexTabela].linha_fin){
-            numeracao[i] = [""];
-            indexTabela ++;
+            }else if (linhaAtual == tabelas[indexTabela].linha_fin){
+                numeracao[i] = [""];
+                indexTabela ++;
             item = 1;
-            // console.log(linhaAtual)
-            // console.log(numeracao[i])
+            // log(linhaAtual)
+            // log(numeracao[i])
         }else{ //se não estiver em tabela, preencher com vazio
             numeracao[i] = [""];
-            // console.log(linhaAtual)
-            // console.log(numeracao[i])
-            // console.log(numeracao[i])
+            // log(linhaAtual)
+            // log(numeracao[i])
+            // log(numeracao[i])
         }
     }
     //return numeracao;
-
+    
     return await Excel.run(async (context)=>{
         const ws = context.workbook.worksheets.getItem("Precificação");
         var  range = ws.getRange(coluna.concat(primeiraLinha, ':', coluna, ultimaLinha)).load("values");
         //await context.sync();
-    
+        
         let novosvalores = numeracao;
         range.values = novosvalores;
+        log(`FIM renumerar()`)
         return await context.sync();
     });
-        
+    
     //se a célula for branca e != da última linha, corresponde a um item
     //se a célular for #D9D9D9, é um subitem
-
+    
 }
 
 async function calculaContribuicao(){
     await atualizaArrayTabelas();
-
+    
     var arrayContribuicao;
     var custoTotal = 0;
     var linhaFinal = tabelas[tabelas.length -1].linha_fin;
     var linhaInicial = tabelas[0].linha_ini + 2;
-    //console.log(`custoTotal: ${custoTotal}`)
+    //log(`custoTotal: ${custoTotal}`)
     var arrayCustos = await Excel.run(async (context)=>{
         const ws = context.workbook.worksheets.getItem(id.precificacao);
         var  range = ws.getRange(colunas[7].fin + linhaInicial + ":" +colunas[7].fin + linhaFinal).load("values");
@@ -1133,7 +1231,7 @@ async function calculaContribuicao(){
     });
 
     var arrayPropriedades = await getCellProperties(colunas[7].fin + linhaInicial + ":" +colunas[7].fin + linhaFinal);
-    console.log(arrayPropriedades);
+    log(arrayPropriedades);
     //return arrayPropriedades;
     
 
@@ -1142,8 +1240,8 @@ async function calculaContribuicao(){
     //que é o cabeçalho de um kit. Portanto, não irá somar no custo total
     for (j in tabelas){
         for (i in arrayCustos){
-            //console.log(`j: ${j}  ---   i: ${i}`)
-            //console.log(`if( ${ (parseInt(i) + tabelas[0].linha_ini + 2)}  >=  ${tabelas[j].linha_ini + 2} & ${parseInt(i)+tabelas[0].linha_ini + 2} <= ${tabelas[j].linha_fin -1})`)
+            //log(`j: ${j}  ---   i: ${i}`)
+            //log(`if( ${ (parseInt(i) + tabelas[0].linha_ini + 2)}  >=  ${tabelas[j].linha_ini + 2} & ${parseInt(i)+tabelas[0].linha_ini + 2} <= ${tabelas[j].linha_fin -1})`)
             if ( (parseInt(i) + tabelas[0].linha_ini + 2) >= (tabelas[j].linha_ini + 2) & (parseInt(i)+tabelas[0].linha_ini + 2) <= (tabelas[j].linha_fin -1)) {
                 if (arrayPropriedades[i][0].format.font.color != "#203764"){
                     custoTotal = custoTotal + parseFloat(arrayCustos[i][0]);
@@ -1153,10 +1251,10 @@ async function calculaContribuicao(){
                     do {
                         numSubitens = numSubitens + 1;
 
-                        console.log(`arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9"`)
-                        console.log(`arrayPropriedades[${parseInt(i)} + ${numSubitens}][0].format.fill.color == "#D9D9D9"`)
-                        console.log(parseFloat(arrayCustos[i][0]))
-                        console.log(arrayPropriedades.length)
+                        log(`arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9"`)
+                        log(`arrayPropriedades[${parseInt(i)} + ${numSubitens}][0].format.fill.color == "#D9D9D9"`)
+                        log(parseFloat(arrayCustos[i][0]))
+                        log(arrayPropriedades.length)
 
                     } while ((arrayPropriedades[parseInt(i) + numSubitens][0].format.fill.color == "#D9D9D9") & ((parseInt(i) + numSubitens) < arrayPropriedades.length -1));
 
@@ -1171,9 +1269,9 @@ async function calculaContribuicao(){
 
                     
                 }
-                //console.log(`j: ${j}  ---   i: ${i}`)
-                //console.log(`arrayCustos[i][0]: ${arrayCustos[i][0]}`)
-                //console.log(`custoTotal: ${custoTotal}`)
+                //log(`j: ${j}  ---   i: ${i}`)
+                //log(`arrayCustos[i][0]: ${arrayCustos[i][0]}`)
+                //log(`custoTotal: ${custoTotal}`)
             }
             
             if(arrayCustos[i][0] == "VALOR TOTAL"){
@@ -1197,7 +1295,7 @@ async function calculaContribuicao(){
     }
 
     //return arrayContribuicao;
-    console.log(custoTotal)
+    log(custoTotal)
     await Excel.run(async (context)=>{
         const ws = context.workbook.worksheets.getItem("Precificação");
         var  range = ws.getRange(colunas[1].fin + linhaInicial + ":" +colunas[1].fin + linhaFinal).load("values");
@@ -1215,7 +1313,7 @@ async function copiarPlanilhaSV(){
     const COLUNA_ID_SV = 'V'
 
     if(id.servicos.length > 10){
-        console.log(`Não é possível adicionar mais que 10 planilhas de serviço`)
+        log(`Não é possível adicionar mais que 10 planilhas de serviço`)
         return -1
     }
 
@@ -1276,7 +1374,7 @@ async function copiarPlanilhaSV(){
 
         context.workbook.worksheets.getItem(id.param).getRange(COLUNA_ID_SV+ (id.servicos.length + 1) +":"+COLUNA_ID_SV+(id.servicos.length + 1)).values = copiedSheet.id;
     
-        console.log("ID: " + copiedSheet.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
+        log("ID: " + copiedSheet.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
 
         await atualizaListaPlanilhas()
     });
@@ -1287,7 +1385,7 @@ async function novaPlanilhaCustomizada(){
     const COLUNA_ID_CUST = 'Y'
 
     if(id.custom.length > 10){
-        console.log(`Não é possível adicionar mais que 10 planilhas customizadas`)
+        log(`Não é possível adicionar mais que 10 planilhas customizadas`)
         return -1
     }
 
@@ -1344,7 +1442,7 @@ async function novaPlanilhaCustomizada(){
 
         workbook.worksheets.getItem(id.param).getRange(COLUNA_ID_CUST+ (id.custom.length + 1) +":"+COLUNA_ID_CUST+(id.custom.length + 1)).values = novaPlanilha.id;
     
-        console.log("ID: " + novaPlanilha.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
+        log("ID: " + novaPlanilha.visibility );//+ "' was copied to '" + copiedSheet.name + "'");
 
         await atualizaListaPlanilhas()
     });
@@ -1474,7 +1572,7 @@ async function cronograma(){
                     linhaCronograma.format.borders.getItem('EdgeBottom').color = "#F2F2F2";
                 }
 
-                //console.log(range)
+                //log(range)
                 linhaCronograma.formulas = arrayFormulaItem;
 
                 //linhaCronograma.format.borders.getItem('EdgeBottom').color = "#000000";
@@ -1515,7 +1613,7 @@ async function cronograma(){
         cronograma.activate();
         context.workbook.protection.protect(SECRET)
         await context.sync();
-        //console.log("ID: " + cronograma.name );
+        //log("ID: " + cronograma.name );
 
     });
 
@@ -1579,7 +1677,7 @@ async function copiaTabelaParaDI(){
         //tabela resumo
 
         //soma de impostos
-        despesas.getRange("D12").formulas = `=SUM(G${primeiraLinha}:G${primeiraLinha + cabecalhos.length - 1})`;
+        despesas.getRange("D12").formulas = `=-SUM(G${primeiraLinha}:G${primeiraLinha + cabecalhos.length - 1})`;
         await context.sync();
 
         await resumo()
@@ -1600,105 +1698,127 @@ async function resumo(){
 
         // VALOR DO FATURAMENTO
         // CUSTOS DE AQUISIÇÃO EM REAIS
+        despesas.getRange("D4").formulas = `=-subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}) - SUM(D6:D10)`;
         // CUSTOS DE IMPORTAÇÃO
-        despesas.getRange("D5").formulas = `=(subtotal(9, Precificação!${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}) - subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}))`;
+        despesas.getRange("D5").formulas = `=-(subtotal(9, Precificação!${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}) - subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}))`;
         if(id.servicos.length > 1){
             // CUSTOS DIRETOS DE MÃO DE OBRA PRÓPRIA  
             for (i in id.servicos){
-                console.log(i)
+                log(i)
                 let servico = context.workbook.worksheets.getItem(id.servicos[i]);
                 servico.load("name");
                 await context.sync();
 
-                console.log(servico.name)
+                log(servico.name)
 
                 if (i == 1){
-                    range = "='" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
-                    //console.log(`range1: ${range}`)
+                    range = "=-('" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+                    //log(`range1: ${range}`)
                 }
                 if (i > 1){
                     range = range + " + '" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
-                    //console.log(`range1+: ${range}`)
+                    //log(`range1+: ${range}`)
+                }
+                if (i == id.servicos.length-1){
+                    range = range + " )"
+
                 }
             }
+            log(range)
             despesas.getRange("D6").formulas = range;
 
             // CUSTOS COM SUBCONTRATAÇÕES, LOCAÇÕES E DESPESAS DIVERSAS
             for (i in id.servicos){
-                console.log(i)
+                log(i)
                 let servico = context.workbook.worksheets.getItem(id.servicos[i]);
                 servico.load("name");
                 await context.sync();
 
-                console.log(servico.name)
+                log(servico.name)
 
                 if (i == 1){
-                    range = "='" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
-                    //console.log(`range1: ${range}`)
+                    range = "=-('" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+                    //log(`range1: ${range}`)
                 }
                 if (i > 1){
                     range = range + " + '" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
-                    //console.log(`range1+: ${range}`)
+                    //log(`range1+: ${range}`)
+                }
+                if (i == id.servicos.length-1){
+                    range = range + " )"
+
                 }
             }
             despesas.getRange("D7").formulas = range;
 
             // CUSTOS COM LOGÍSTICA PARA EQUIPE DE ACOMPANHAMENTO 
             for (i in id.servicos){
-                console.log(i)
+                log(i)
                 let servico = context.workbook.worksheets.getItem(id.servicos[i]);
                 servico.load("name");
                 await context.sync();
 
-                console.log(servico.name)
+                log(servico.name)
 
                 if (i == 1){
-                    range = "='" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
-                    //console.log(`range1: ${range}`)
+                    range = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+                    //log(`range1: ${range}`)
                 }
                 if (i > 1){
                     range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
-                    //console.log(`range1+: ${range}`)
+                    //log(`range1+: ${range}`)
+                }
+                if (i == id.servicos.length-1){
+                    range = range + " )"
+
                 }
             }
             despesas.getRange("D8").formulas = range;
 
             // CUSTOS COM LOGÍSTICA PARA EQUIPE DE EXECUÇÃO 
             for (i in id.servicos){
-                console.log(i)
+                log(i)
                 let servico = context.workbook.worksheets.getItem(id.servicos[i]);
                 servico.load("name");
                 await context.sync();
 
-                console.log(servico.name)
+                log(servico.name)
 
                 if (i == 1){
-                    range = "='" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
-                    //console.log(`range1: ${range}`)
+                    range = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+                    //log(`range1: ${range}`)
                 }
                 if (i > 1){
                     range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
-                    //console.log(`range1+: ${range}`)
+                    //log(`range1+: ${range}`)
+                }
+                if (i == id.servicos.length-1){
+                    range = range + " )"
+
                 }
             }
             despesas.getRange("D9").formulas = range;
 
             // CUSTOS COM FRETES 
             for (i in id.servicos){
-                console.log(i)
+                log(i)
                 let servico = context.workbook.worksheets.getItem(id.servicos[i]);
                 servico.load("name");
                 await context.sync();
 
-                console.log(servico.name)
+                log(servico.name)
 
                 if (i == 1){
-                    range = "='" + servico.name + "'" + "!SUBTOTAL_FRETES";
-                    //console.log(`range1: ${range}`)
+                    range = "=-('" + servico.name + "'" + "!SUBTOTAL_FRETES";
+                    //log(`range1: ${range}`)
                 }
                 if (i > 1){
                     range = range + " + '" + servico.name + "'" + "!SUBTOTAL_FRETES";
-                    //console.log(`range1+: ${range}`)
+                    //log(`range1+: ${range}`)
+                }
+                if (i == id.servicos.length-1){
+                    range = range + " )"
+
                 }
             }
             despesas.getRange("D10").formulas = range;
@@ -1711,17 +1831,41 @@ async function resumo(){
             despesas.getRange("D10").formulas = range;
         }
         // COMISSÕES
-        despesas.getRange("E11").formulas = `${p.state.comCom + p.state.comDir + p.state.comPar + p.state.comPre}`;
+        despesas.getRange("E11").formulas = `=-${p.state.comCom + p.state.comDir + p.state.comPar + p.state.comPre}`;
         // IMPOSTOS
         //despesas.getRange("D12").formulas = ``;
         // SERVIÇOS DE TERCEIROS
-        despesas.getRange("E13").formulas = `${p.state.svTerc}`;
+        despesas.getRange("E13").formulas = `=-${p.state.svTerc}`;
         // TAXA ADMINISTRATIVA
-        despesas.getRange("E14").formulas = `${p.state.txAdm}`;
+        despesas.getRange("E14").formulas = `=-${p.state.txAdm}`;
+        
         // CRÉDITO ICMS
-        despesas.getRange("D15").formulas = ``;
+        var creditoEmReais = 0;
+        var arrayCustos = precificacao.getRange(`${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+        var arrayCredICMS = precificacao.getRange(`${colunas[5].fin}${tabelas[0].linha_ini}:${colunas[5].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+        arrayCredICMS.load("values");
+        arrayCustos.load("values");
+        await context.sync();
+ 
+ 
+        ////remove os valores dos cabeçalhos dos kits
+        var offset = tabelas[0].linha_ini
+        for (i in tabelas){
+            for (j in tabelas[i].kit){
+                arrayCustos.values[tabelas[i].kit[j].linha - offset] = ['']
+            }
+        }
+    
+        ////varre os arrays multiplicando os valores
+        for (i in arrayCustos.values){
+            if (arred4(arrayCustos.values[i] * arrayCredICMS.values[i]) >= 0){
+                creditoEmReais = creditoEmReais + arred4(arrayCustos.values[i] * arrayCredICMS.values[i]);
+            }
+        }
+        despesas.getRange("D15").formulas = `${arred4(creditoEmReais)}`;
+
         // MARGEM LÍQUIDA
-        despesas.getRange("D16").formulas = ``;
+        despesas.getRange("D16").formulas = `=D3 + SUM(D4:D14) + D15`;
 
     });
 
@@ -1732,7 +1876,7 @@ function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
     var icms = calcICMS(tipoItem, false, subTrib, anexoIX);
     var difal = (p.state.ufOrig == p.state.ufDest ? 0: (icmsDaTabela(p.state.ufDest, p.state.ufDest) - icms) * !subTrib);
 
-    console.log(`icms: ${icms} -- difal: ${difal}`)
+    log(`icms: ${icms} -- difal: ${difal}`)
 
     if (tipoItem == 'HW' || tipoItem == 'MAT'){
         return trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal;
@@ -1740,7 +1884,7 @@ function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
         return trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania);
     }else{
         //valida se o tipoItem está dentre os valores permitidos
-        console.log(`Erro: Valor inválido para tipoItem: ${tipoItem}`)
+        log(`Erro: Valor inválido para tipoItem: ${tipoItem}`)
         return -1;
     }
 }
@@ -1778,7 +1922,7 @@ function simNaotoBoolean (input){
     }else if(input == ""){
         return false;
     }else{
-        console.log(`Erro em simNaotoBoolean() - input: "${input}"`)
+        log(`Erro em simNaotoBoolean() - input: "${input}"`)
         return -1;
     }
 }
@@ -1794,7 +1938,7 @@ async function teste(){
         //range = range.values;
 
         //await context.sync()
-        //console.log(plan.id);
+        //log(plan.id);
         return plan.id
     });
 
@@ -1817,17 +1961,17 @@ async function removePlanilhaSV(){
         try {
             await context.sync();    
         } catch (error) {
-            console.log("planilha não existe")
+            log("planilha não existe")
             return -1
         }
 
         //verifica se a planilha é de serviços
         if (id.servicos.indexOf(plan.id) == -1 && id.custom.indexOf(plan.id) == -1){
-            console.log("Não é uma planilha de serviços/customizada")
+            log("Não é uma planilha de serviços/customizada")
 
             return -1
         }else if(plan.id == "{A7441363-1A72-4ACD-854A-C140198E488F}"){
-            console.log("Não é possível excluir a planilha modelo")
+            log("Não é possível excluir a planilha modelo")
             return -1
         }
 
@@ -1917,13 +2061,13 @@ async function removeLinha(){
         var workbook = context.workbook;
 
         if(selecao.planilha != 'Precificação'){
-            console.log('Fora da planilha')
+            log('Fora da planilha')
             return -1
         }
         
-        console.log(`if(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)`)
-        console.log(`if(${paraExcluir.inicial} == ${selecao.inicial} && ${paraExcluir.final} == ${selecao.final})`)
-        console.log(`${(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)}`)
+        log(`if(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)`)
+        log(`if(${paraExcluir.inicial} == ${selecao.inicial} && ${paraExcluir.final} == ${selecao.final})`)
+        log(`${(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final)}`)
         
         
         if(paraExcluir.inicial == selecao.inicial && paraExcluir.final == selecao.final){
@@ -1944,8 +2088,8 @@ async function removeLinha(){
             //se selecao é a (primeira || segunda || terceira ) && (última || penúltima)
             if ( (selecao.inicial == tabelas[i].linha_ini || selecao.inicial == tabelas[i].linha_ini +1 || selecao.inicial == tabelas[i].linha_ini +2) && 
             (selecao.final == tabelas[i].linha_fin || selecao.final == tabelas[i].linha_fin -1)){
-                console.log('excluir tabela toda');
-                console.log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`);
+                log('excluir tabela toda');
+                log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`);
                 selecao.inicial = tabelas[i].linha_ini;
                 selecao.final = tabelas[i].linha_fin + 1;
 
@@ -1956,8 +2100,8 @@ async function removeLinha(){
             
             //se selecao é entre (primeira) && (<= última)
             }else if ( (selecao.inicial == tabelas[i].linha_ini) && (selecao.final <= tabelas[i].linha_fin)){
-                console.log('excluir tabela toda')
-                console.log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`)
+                log('excluir tabela toda')
+                log(`novo range: ${tabelas[i].linha_ini}:${tabelas[i].linha_fin + 1}`)
                 selecao.inicial = tabelas[i].linha_ini;
                 selecao.final = tabelas[i].linha_fin + 1;
                 workbook.worksheets.getItem(id.precificacao).getRange(selecao.inicial + ':' + selecao.final).select();
@@ -1966,7 +2110,7 @@ async function removeLinha(){
 
             //se selecao é entre terceira e penúltima
             }else if(selecao.inicial >= tabelas[i].linha_ini +2 && selecao.final <= tabelas[i].linha_fin -1){
-                console.log('meio da tabela')
+                log('meio da tabela')
 
                 
                 
@@ -2027,13 +2171,13 @@ async function moveParaDireita(){
         if (workbook.protection.protected) {
             workbook.protection.unprotect(SECRET);
         }
-        console.log(plan.position)
+        log(plan.position)
         //return plan.position;
         plan.position = plan.position + 1;
 
         workbook.protection.protect(SECRET);
         await context.sync();
-        console.log(plan.position)
+        log(plan.position)
         return context.sync();
         
     });
