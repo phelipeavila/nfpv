@@ -1,9 +1,9 @@
 {
     "usuarios" : {
         "prevendas" : "prevendas",
-        "comercial" : "comercial",
-        "implantacao" : "implantacao",
-        "compras" : "compras",
+        "comercial1" : "comercial",
+        "implantacao1" : "implantacao",
+        "compras1" : "compras",
         "diretoria" : "administrador"
     },
     "acessos" : 
@@ -25,7 +25,7 @@
                 "cronograma": false,
                 "cadastros": false
             },
-            "implantacao1" : {
+            "implantacao" : {
                 "nav-edicao": false,
                 "nav-faturamento": true,
                 "nav-margens": false,
@@ -42,7 +42,7 @@
                 "cronograma": true,
                 "cadastros": false
             },
-            "compras1" : {
+            "compras" : {
                 "nav-edicao": false,
                 "nav-faturamento": true,
                 "nav-margens": false,
@@ -59,7 +59,7 @@
                 "cronograma": true,
                 "cadastros": false
             },
-            "comercial1" : {
+            "comercial" : {
                 "nav-edicao": true,
                 "nav-faturamento": true,
                 "nav-margens": true,
@@ -76,7 +76,7 @@
                 "cronograma": false,
                 "cadastros": false
             },
-            "diretoria" : {
+            "administrador" : {
                 "nav-edicao": true,
                 "nav-faturamento": true,
                 "nav-margens": true,
