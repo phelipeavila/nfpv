@@ -1,7 +1,7 @@
 {
     "usuarios" : {
         "prevendas" : "prevendas",
-        "comercial1" : "comercial",
+        "comercial" : "comercial",
         "implantacao1" : "implantacao",
         "compras1" : "compras",
         "diretoria" : "administrador"
