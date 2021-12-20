@@ -2,8 +2,8 @@
     "usuarios" : {
         "prevendas" : "prevendas",
         "comercial" : "comercial",
-        "implantacao1" : "implantacao",
-        "compras1" : "compras",
+        "implantacao" : "implantacao",
+        "compras" : "compras",
         "diretoria" : "administrador"
     },
     "acessos" : 
