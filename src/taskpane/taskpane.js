@@ -188,6 +188,7 @@ async function comeceAqui() {
       
     });
     
+    await mostraOsPermitidos();
 
     
     //document.getElementById("perm-all-other-fields").hidden = true;
@@ -388,7 +389,7 @@ async function atualizaTributos() {
 
 async function atualizaParametros() {
   Excel.run(async (context)=>{
-    const ws = context.workbook.worksheets.getItem("param");
+    const ws = context.workbook.worksheets.getItem(id.param);
     var  range = ws.getRange("B1:B21").load("values");
     await context.sync();
 
@@ -615,9 +616,6 @@ function escondeCampos(){
   document.getElementById("perm-formatar").hidden = true;
   document.getElementById("perm-implantacao").hidden = true;
   document.getElementById("nav-ul").hidden = true;
-
-
-
 }
 
 
