@@ -1913,14 +1913,21 @@ function nextLetterInAlphabet(letter, index = 1 ) {
 
 //recebe uma string. Se a string estiber escrito SIM/sim, retorna true
 //se estiver vazia ou NÃO/não, retorna falso
+//1.2 -> adicionei o parâmetro 'vazio'. Caso não seja informado ou FALSE, valores vazios retornam FALSE,
+// mas se for passado parâmetro TRUE, valores vazios retornam TRUE
 //Obs: não é case sensitive
-function simNaotoBoolean (input){
+function simNaotoBoolean (input, vazio = false){
     if(/^([s|S][i|I][m|M])$/.test(input)){
         return true;
     }else if (/^([n|N][a|ã|Ã|A][o|O])$/.test(input)){
         return false;
     }else if(input == ""){
+        if (vazio == false){
         return false;
+        }else {
+            return true;
+        }
+        
     }else{
         log(`Erro em simNaotoBoolean() - input: "${input}"`)
         return -1;
