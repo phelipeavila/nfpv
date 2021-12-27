@@ -29,6 +29,7 @@ Office.initialize = () => {
     aplicarComCom: true,
     aplicarComPre: true,
     aplicarComPar: true,
+    politicaParceiros: true,
     comDir: 0,
     comCom: 0,
     comPre: 0,
@@ -76,10 +77,15 @@ Office.initialize = () => {
     document.getElementById("inputMargem").onchange = atualizaMargem;
     document.getElementById("inputTxAdm").onchange = atualizaMargem;
     document.getElementById("inputSvTerc").onchange = atualizaMargem;
+    document.getElementById("inputComissaoDiretoria").onchange = atualizaComissoesManualmente;
+    document.getElementById("inputComissaoComercial").onchange = atualizaComissoesManualmente;
+    document.getElementById("inputComissaoPrevendas").onchange = atualizaComissoesManualmente;
+    document.getElementById("inputComissaoParceiro").onchange = atualizaComissoesManualmente;
     document.getElementById("checkDiretoria").onchange = atualizaMargem;
     document.getElementById("checkComercial").onchange = atualizaMargem;
     document.getElementById("checkParceiro").onchange = atualizaMargem;
     document.getElementById("checkPrevendas").onchange = atualizaMargem;
+    document.getElementById("checkPoliticaParceiros").onchange = atualizaMargem;
     document.getElementById("inputTipoFaturamento").onchange = atualizaMargem;
     document.getElementById("inputUFOrigem").onchange = atualizaMargem;
     document.getElementById("inputUFDestino").onchange = atualizaMargem;
@@ -202,22 +208,67 @@ function buscaMargem(){
   //document.getElementById('inputMargem').value = p.state.margem * 100;
   //document.getElementById('inputTxAdm').value = p.state.txAdm * 100;
   //document.getElementById('inputSvTerc').value = p.state.svTerc * 100;
-  document.getElementById('inputMargem').value = (Math.round(p.state.margem*1000000)/10000);
-  document.getElementById('inputTxAdm').value = (Math.round(p.state.txAdm*1000000)/10000);
-  document.getElementById('inputSvTerc').value = (Math.round(p.state.svTerc*1000000)/10000);
-  document.getElementById('checkDiretoria').checked  = p.state.aplicarComDir;
-  document.getElementById('checkComercial').checked  = p.state.aplicarComCom;
-  document.getElementById('checkPrevendas').checked  = p.state.aplicarComPre;
-  document.getElementById('checkParceiro').checked  = p.state.aplicarComPar;
+  document.getElementById('inputMargem').value        = (Math.round(p.state.margem*1000000)/10000);
+  document.getElementById('inputTxAdm').value         = (Math.round(p.state.txAdm*1000000)/10000);
+  document.getElementById('inputSvTerc').value        = (Math.round(p.state.svTerc*1000000)/10000);
+  document.getElementById('checkDiretoria').checked   = p.state.aplicarComDir;
+  document.getElementById('checkComercial').checked   = p.state.aplicarComCom;
+  document.getElementById('checkPrevendas').checked   = p.state.aplicarComPre;
+  document.getElementById('checkParceiro').checked    = p.state.aplicarComPar;
+  document.getElementById('checkParceiro').disabled    = !p.state.politicaParceiros;
   
   
-  document.getElementById('inputTipoFaturamento').value = p.state.tipoFatur;
-  document.getElementById('inputUFOrigem').value = p.state.ufOrig;
-  document.getElementById('inputUFDestino').value = p.state.ufDest;
-  document.getElementById('checkGoiania').checked  = p.state.destGoiania;
-  document.getElementById('checkICMS').checked  = p.state.zerarICMS;
+  document.getElementById('inputTipoFaturamento').value       = p.state.tipoFatur;
+  document.getElementById('inputUFOrigem').value              = p.state.ufOrig;
+  document.getElementById('inputUFDestino').value             = p.state.ufDest;
+  document.getElementById('checkGoiania').checked             = p.state.destGoiania;
+  document.getElementById('checkICMS').checked                = p.state.zerarICMS;
+  document.getElementById('checkPoliticaParceiros').checked   = p.state.politicaParceiros;
+  
+  document.getElementById("inputComissaoDiretoria").value      = p.state.comDir * 100;
+  document.getElementById("inputComissaoComercial").value      = p.state.comCom * 100;
+  document.getElementById("inputComissaoPrevendas").value      = p.state.comPre * 100;
+  document.getElementById("inputComissaoParceiro").value       = p.state.comPar * 100;
+
   
 }
+
+async function atualizaComissoesManualmente(){
+
+  if (p.state.aplicarComDir){
+    p.state.comDir = arred4(document.getElementById("inputComissaoDiretoria").value / 100);
+  }  
+
+  if (p.state.aplicarComCom){
+    p.state.comCom = arred4(document.getElementById("inputComissaoComercial").value / 100);
+  }  
+  if (p.state.aplicarComPre){
+    p.state.comPre = arred4(document.getElementById("inputComissaoPrevendas").value / 100);
+  }  
+  if (p.state.aplicarComPar){
+    p.state.comPar = arred4(document.getElementById("inputComissaoParceiro").value  / 100);
+  }  
+
+
+  await Excel.run(async (context)=>{
+    const ws = context.workbook.worksheets.getItem(id.param);
+    var  range = ws.getRange("B3:B6").load("values");
+    //await context.sync();
+
+    let novosvalores = [[p.state.comDir],
+                        [p.state.comCom],
+                        [p.state.comPre],
+                        [p.state.comPar]
+                    ];
+    range.values = novosvalores;
+    await context.sync();
+
+  });
+
+  buscaMargem();
+
+}
+
 
 //atualizar do frontend para planilha
 async function atualizaMargem(){
@@ -237,16 +288,14 @@ async function atualizaMargem(){
     p.state.aplicarComPar = document.getElementById('checkParceiro').checked;
     p.state.destGoiania = document.getElementById('checkGoiania').checked;
     p.state.zerarICMS = document.getElementById('checkICMS').checked;
+    p.state.politicaParceiros = document.getElementById('checkPoliticaParceiros').checked
 
-    //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
     
     
     //calcula comissao diretoria
     if (!p.state.aplicarComDir) {
-        //log("FALSE")
         p.state.comDir = 0;
     }else{
-        //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
         if(p.state.margem <= 0) { // SE MARGEM <= 0%
             p.state.comDir = 0;
         }else if (p.state.margem > 0 && p.state.margem <= 0.10){ // SE 0% < MARGEM <= 10%   ->  1%
@@ -256,17 +305,13 @@ async function atualizaMargem(){
         }else {
             p.state.comDir = 0.01; // SE MARGEM > 15%   ->  1 %
         }
-
     }
-   // log(`COMIS. DIRETORIA: ${p.state.comDir * 100}%`)
 
 
     //calcula comissao comercial
     if (!p.state.aplicarComCom) {
-        //log("FALSE")
         p.state.comCom = 0;
     }else{
-        //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
         if(p.state.margem < 0.1) {
             p.state.comCom = 0;
         }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
@@ -277,45 +322,41 @@ async function atualizaMargem(){
             p.state.comCom = 0.03;
         }
     }
-    //log(`COMIS. COMERCIAL: ${p.state.comCom * 100}%`)
 
-        //calcula comissao prevendas
-        if (!p.state.aplicarComPre) {
-          //log("FALSE")
-          p.state.comPre = 0;
-      }else{
-          //log(`MARGEM: ${Math.round(p.state.margem * 10000)/100}%`)
-          if(p.state.margem < 0.1) {
-              p.state.comPre = 0.0025;
-          }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
-              p.state.comPre = 0.0025;
-          }else if (p.state.margem > 0.20 && p.state.margem <= 0.30){
-              p.state.comPre = 0.0025;
-          }else {
-              p.state.comPre = 0.0025;
-          }
-      }  
-      //log(`COMIS. PRÉ-VENDAS: ${p.state.comPre * 100}%`)
-    
-    //calcula comissao parceiro
-
-    if (!p.state.aplicarComPar) {
-        //log("FALSE")
-        p.state.comPar = 0;
+    //calcula comissao prevendas
+    if (!p.state.aplicarComPre) {
+      p.state.comPre = 0;
     }else{
-        if(p.state.margem < 0.1) {
-            p.state.comPar = 0;
-        }else if (p.state.margem >= 0.1 && p.state.margem < 0.15){
-            p.state.comPar = 0.03;
-        }else if (p.state.margem >= 0.15 && p.state.margem < 0.20){
-            p.state.comPar = 0.08;
-        }else if (p.state.margem >= 0.20 && p.state.margem < 0.25){
-            p.state.comPar = 0.12;
-        }else {
-            p.state.comPar = 0.15;
-        }
+      if(p.state.margem < 0.1) {
+          p.state.comPre = 0.0025;
+      }else if (p.state.margem >= 0.1 && p.state.margem <= 0.20){
+          p.state.comPre = 0.0025;
+      }else if (p.state.margem > 0.20 && p.state.margem <= 0.30){
+          p.state.comPre = 0.0025;
+      }else {
+          p.state.comPre = 0.0025;
+      }
     }  
-    //log(`COMIS. PARCEIRO: ${p.state.comPar * 100}%`)
+
+    //calcula comissao parceiro
+    if (!p.state.aplicarComPar) {
+      p.state.comPar = 0;
+    }else{
+        if (p.state.politicaParceiros){
+          if(p.state.margem < 0.1) {
+              p.state.comPar = 0;
+          }else if (p.state.margem >= 0.1 && p.state.margem < 0.15){
+              p.state.comPar = 0.03;
+          }else if (p.state.margem >= 0.15 && p.state.margem < 0.20){
+              p.state.comPar = 0.08;
+          }else if (p.state.margem >= 0.20 && p.state.margem < 0.25){
+              p.state.comPar = 0.12;
+          }else {
+              p.state.comPar = 0.15;
+          }
+        }   
+    }
+    //
 
     if (p.state.ufDest != 'GO') {
       document.getElementById('checkGoiania').disabled = true;
@@ -327,7 +368,7 @@ async function atualizaMargem(){
     }
     
     await Excel.run(async (context)=>{
-        const ws = context.workbook.worksheets.getItem("param");
+        const ws = context.workbook.worksheets.getItem(id.param);
         var  range = ws.getRange("B1:B16").load("values");
         //await context.sync();
 
@@ -350,8 +391,14 @@ async function atualizaMargem(){
                         ];
         range.values = novosvalores;
         await context.sync();
+        
+        //LINHA B22 - aplicar política de comissionamento para parceiros
+        range = ws.getRange("B22").load("values");
+        novosvalores = [[p.state.politicaParceiros]];
+        range.values = novosvalores;
+        await context.sync();
     });
-    
+    buscaMargem();
 }
 
 
@@ -387,35 +434,40 @@ async function atualizaTributos() {
   })
 }
 
+
+//Lê os dados da planilha 'param' e carrega para as variáveis globais
+
+
 async function atualizaParametros() {
   Excel.run(async (context)=>{
     const ws = context.workbook.worksheets.getItem(id.param);
-    var  range = ws.getRange("B1:B21").load("values");
+    var  range = ws.getRange("B1:B22").load("values");
     await context.sync();
 
     p.state.hoje = new Date();    
     
-    p.state.tipoFatur     = range.m_values[0][0];
-    p.state.margem        = range.m_values[1][0];
-    p.state.comDir        = range.m_values[2][0];
-    p.state.comCom        = range.m_values[3][0];
-    p.state.comPre        = range.m_values[4][0];
-    p.state.comPar        = range.m_values[5][0];
-    p.state.txAdm         = range.m_values[6][0];
-    p.state.svTerc        = range.m_values[7][0];
-    p.state.aplicarComDir = range.m_values[8][0];
-    p.state.aplicarComCom = range.m_values[9][0];
-    p.state.aplicarComPre = range.m_values[10][0];
-    p.state.aplicarComPar = range.m_values[11][0];
-    p.state.ufOrig        = range.m_values[12][0];
-    p.state.ufDest        = range.m_values[13][0];
-    p.state.destGoiania   = range.m_values[14][0];
-    p.state.zerarICMS     = range.m_values[15][0];
-    p.state.txImpHW       = range.m_values[16][0];
-    p.state.txImpSW       = range.m_values[17][0];
-    p.state.dataCambio    = ExcelDateToJSDate(range.m_values[18], -3);
-    p.state.dolarPTAX     = range.m_values[19];
-    p.state.euroPTAX      = range.m_values[20];
+    p.state.tipoFatur         = range.m_values[0][0];
+    p.state.margem            = range.m_values[1][0];
+    p.state.comDir            = range.m_values[2][0];
+    p.state.comCom            = range.m_values[3][0];
+    p.state.comPre            = range.m_values[4][0];
+    p.state.comPar            = range.m_values[5][0];
+    p.state.txAdm             = range.m_values[6][0];
+    p.state.svTerc            = range.m_values[7][0];
+    p.state.aplicarComDir     = range.m_values[8][0];
+    p.state.aplicarComCom     = range.m_values[9][0];
+    p.state.aplicarComPre     = range.m_values[10][0];
+    p.state.aplicarComPar     = range.m_values[11][0];
+    p.state.ufOrig            = range.m_values[12][0];
+    p.state.ufDest            = range.m_values[13][0];
+    p.state.destGoiania       = range.m_values[14][0];
+    p.state.zerarICMS         = range.m_values[15][0];
+    p.state.txImpHW           = range.m_values[16][0];
+    p.state.txImpSW           = range.m_values[17][0];
+    p.state.dataCambio        = ExcelDateToJSDate(range.m_values[18], -3);
+    p.state.dolarPTAX         = range.m_values[19];
+    p.state.euroPTAX          = range.m_values[20];
+    p.state.politicaParceiros = simNaotoBoolean(range.m_values[21][0], true);
 
     
 
@@ -947,6 +999,13 @@ function mostraMargens(){
   }
   menu.children["li-margens"].style.borderBottom = "3px solid";
   menu.children["li-margens"].style.borderColor = "white";
+
+  var inputs_comissoes = document.getElementsByClassName("somenteDiretoria"); //campu input no HTML que mostra os valores das comissões
+  for ( i in inputs_comissoes){
+    if (perfil == "administrador"){
+      inputs_comissoes[i].hidden = false;
+    }
+  }
 
 }
 

@@ -30,7 +30,7 @@
 
   <body id="app-body-up" class="ms-font-m ms-welcome ms-Fabric">
     <header class="ms-welcome__header ms-bgColor-neutralLighter">
-        <img height="70" src="../../assets/logo-filled-slogan.png" alt="tecno.it" title="tecno.it" />
+        <img height="60" src="../../assets/logo_it_fundo_cinza.png" alt="tecno.it" title="tecno.it" />
 
     </header>
     <section id="sideload-msg" class="ms-welcome__main">
@@ -53,7 +53,7 @@
                     <div class="div-login-2">
                             <input type="password" id="input-passwd" placeholder="Digite sua senha" tabindex="0" value="implantacao">
                             <button><img src="../../assets/login.png" alt="" id="btn-login"></button>
-                            <label>v1.3</label>
+                            <label>v1.4</label>
                     </div>
                 </div>
             </span>  <!--  FIM PERM-LOGIN  -->
@@ -68,7 +68,7 @@
                                 <input type="date" id="inputDate">
                                 <!-- <button id="btnUpdateCambio"><img src="../../assets/atualizar.png" alt=""></button> -->
                             </div>
-                            <div class="div-cambio-2">
+                            <div class="div-cambio-2" style="margin-bottom: 10px;">
                                 <input type="radio" name="radioCambio" id="radioCambioManual" title="Selecione uma data">
                                 <label for="inputUSD" id="labelInputUSD">USD</label>
                                 <input type="number" name="inputUSD" id="inputUSD" step="0.1" title="Câmbio em uso na FPV">
@@ -108,43 +108,60 @@
                 <span id="perm-margens-comissoes" hidden="true">
                     <div class="div-margens-1">
                         <span id="perm-margens">
-                            <div class="div-margens-2">
-                                <div class="div-param-3">
-                                    <input type="number" class="inputMargem" id="inputMargem" step="0.1">
-                                    <label for="">% Margem</label>
-                                </div>
-                                <div class="div-param-3">
-                                    <input type="number" class="inputMargem" id="inputTxAdm" step="0.1">
-                                    <label for="">% Tx. Adm.</label>
-                                </div>
-                                <div class="div-param-3">
-                                    <input type="number" class="inputMargem" id="inputSvTerc" step="0.1">
-                                    <label for="">% Sv. Terc.</label>
-                                </div>
+                            <div class="div-margens-2" style="padding-top: 10px; width: 130px;">
+                                
+                                    
+                                    <div class="div-param-3">
+                                        <input type="number" class="inputMargem" id="inputMargem" step="0.5">
+                                        <label for="">% Margem</label>
+                                    </div>
+                                    <div class="div-param-3">
+                                        <input type="number" class="inputMargem" id="inputTxAdm" step="0.5">
+                                        <label for="">% Tx. Adm.</label>
+                                    </div>
+                                    <div class="div-param-3 somenteDiretoria" >
+                                        <input type="number" class="inputMargem somenteDiretoria" id="inputSvTerc" step="0.5" hidden="true">
+                                        <label for="" class="somenteDiretoria" hidden="true">% Sv. Terc.</label>
+                                    </div>
+                                
+
                             </div>
                         </span>     <!--  FIM PERM-MARGENS  -->
                         <span id="perm-comissoes">
                             <div class="div-margens-2">
-                                <fieldset style="border-radius: 2px; border-color: #d9d9d9;">
-                                    <legend>Comissões</legend>
+                                <fieldset style="border-radius: 2px; border-color: #d9d9d9; padding: 5px;">
+                                    <legend style="font-size: 0.8rem;">Comissões</legend>
                                     <div class="div-param-3">
+                                        <input type="number" class="inputComissoes somenteDiretoria" id="inputComissaoDiretoria" hidden="true" >
+                                        <label for="" class="inputComissoes somenteDiretoria" hidden = "true">%</label>
                                         <input type="checkbox" id='checkDiretoria'>
                                         <label for="">Diretoria</label>
                                     </div>
                                     <div class="div-param-3">
+                                        <input type="number" class="inputComissoes somenteDiretoria" id="inputComissaoComercial" hidden="true" >
+                                        <label for="" class="inputComissoes somenteDiretoria" hidden = "true">%</label>
                                         <input type="checkbox" id='checkComercial'>
                                         <label for="">Comercial</label>
                                     </div>
                                     <div class="div-param-3">
+                                        <input type="number" class="inputComissoes somenteDiretoria" id="inputComissaoPrevendas" hidden="true" >
+                                        <label for="" class="inputComissoes somenteDiretoria" hidden = "true">%</label>
                                         <input type="checkbox" id='checkPrevendas'>
                                         <label for="">Pré-vendas</label>
                                     </div>
                                     <div class="div-param-3">
+                                        <input type="number" class="inputComissoes somenteDiretoria" id="inputComissaoParceiro" hidden="true" >
+                                        <label for="" class="inputComissoes somenteDiretoria" hidden="true">%</label>
                                         <input type="checkbox" id='checkParceiro'>
                                         <label for="">Parceiro</label>
                                     </div>
                                 </fieldset>
+                                <div class="div-margens-1">
+                                    <input type="checkbox" id="checkPoliticaParceiros" class="somenteDiretoria" hidden="true" >
+                                    <label for="" class="somenteDiretoria" hidden="true">Política de comissionamento para parceiros</label>
+                                </div>
                             </div>    
+
                         </span>      <!--  FIM PERM-COMISSOES  -->
                     </div>
                 </span>
