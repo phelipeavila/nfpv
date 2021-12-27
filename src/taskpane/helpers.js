@@ -1919,7 +1919,7 @@ function nextLetterInAlphabet(letter, index = 1 ) {
 function simNaotoBoolean (input, vazio = false){
     if(input === ""){
         if (vazio == false){
-        return false;
+            return false;
         }else {
             return true;
         }
