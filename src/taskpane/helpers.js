@@ -1917,19 +1917,18 @@ function nextLetterInAlphabet(letter, index = 1 ) {
 // mas se for passado parâmetro TRUE, valores vazios retornam TRUE
 //Obs: não é case sensitive
 function simNaotoBoolean (input, vazio = false){
-    if( input == true || input == false){
-        return input;
-    }else if(/^([s|S][i|I][m|M])$/.test(input)){
-        return true;
-    }else if (/^([n|N][a|ã|Ã|A][o|O])$/.test(input)){
-        return false;
-    }else if(input == ""){
+    if(input === ""){
         if (vazio == false){
         return false;
         }else {
             return true;
         }
-        
+    }else if(/^([s|S][i|I][m|M])$/.test(input)){
+        return true;
+    }else if (/^([n|N][a|ã|Ã|A][o|O])$/.test(input)){
+        return false;
+    }else if( input === true || input === false){
+        return input;
     }else{
         log(`Erro em simNaotoBoolean() - input: "${input}"`)
         return -1;
