@@ -10,7 +10,7 @@
   <DisplayName DefaultValue="Formação de preço de venda"/>
   <Description DefaultValue="Formação de preço de venda - perfil comercial."/>
   <IconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-80.png"/>
+  <HighResolutionIconUrl DefaultValue="https://phelipeavila.github.io/nfpv/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://www.tecno-it.com.br/"/>
   <AppDomains>
     <AppDomain>tecno-it.com.br</AppDomain>
