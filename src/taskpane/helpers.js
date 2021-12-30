@@ -877,14 +877,14 @@ async function getCellProperties(address) {
                 var celula = context.workbook.worksheets.getItem("Precificação").getRange(
                    "J" + (kit.inicial - 1).toString() + ":" +
                    "J" + (kit.inicial - 1 ).toString());
-                celula.formulas = [[]];//`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`]];
+                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`]];
                 log(`${"J" + (kit.inicial - 1).toString() + ":" +"J" + (kit.inicial - 1 ).toString()}`)
                 log(`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)`)
                 //valor de venda total do item
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "K" + (kit.inicial - 1).toString() + ":" +
                     "K" + (kit.inicial - 1 ).toString());
-                celula.formulas = [[]];//`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`]];
+                celula.formulas = [[`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`]];
                 log(`${"K" + (kit.inicial - 1).toString() + ":" + "K" + (kit.inicial - 1 ).toString()}`)
                 log(`=iferror(SUBTOTAL(9,K${kit.inicial}:K${kit.final})/qtde,0)*qtde`)
                 //moeda
@@ -898,14 +898,14 @@ async function getCellProperties(address) {
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "Q" + (kit.inicial - 1).toString() + ":" +
                     "Q" + (kit.inicial - 1 ).toString());
-                celula.formulas = [[`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`]];
+                celula.formulas = [[]];//`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`]];
                 log(`${"Q" + (kit.inicial - 1).toString() + ":" + "Q" + (kit.inicial - 1 ).toString()}`)
                 log(`=iferror(SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde,0)`)
                 //valor custo total
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
                     "R" + (kit.inicial - 1).toString() + ":" +
                     "R" + (kit.inicial - 1 ).toString());
-                celula.formulas = [[`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`]];
+                celula.formulas = [[]];//`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`]];
                 log(`${"R" + (kit.inicial - 1).toString() + ":" + "R" + (kit.inicial - 1 ).toString()}`)
                 log(`=iferror((SUBTOTAL(9,R${kit.inicial}:R${kit.final})/qtde)*qtde,0)`)
                 celula = context.workbook.worksheets.getItem("Precificação").getRange(
