@@ -41,16 +41,16 @@ Office.initialize = () => {
   }
 
   trib.state = {
-    irpjHW: 0,
-    irpjSW: 0,
-    csllHW: 0,
-    csllSW: 0,
+    irpjHW: 0.018,
+    irpjSW: 0.078,
+    csllHW: 0.0108,
+    csllSW: 0.0288,
     cppHW: 0,
     cppSW: 0,
-    issGYN: 0,
-    issOut: 0,
-    pis: 0,
-    cofins: 0,
+    issGYN: 0.03,
+    issOut: 0.08,
+    pis: 0.0065,
+    cofins: 0.03,
     tabelaIcms: []
   }
   
@@ -408,16 +408,16 @@ async function atualizaTributos() {
     var  range = ws.getRange("A1:B22").load("values");
     await context.sync();
 
-    trib.state.irpjHW = range.m_values[1][1];
-    trib.state.irpjSW = range.m_values[2][1];
-    trib.state.csllHW = range.m_values[5][1];
-    trib.state.csllSW = range.m_values[6][1];
-    trib.state.cppHW = range.m_values[9][1];
-    trib.state.cppSW = range.m_values[10][1];
-    trib.state.issGYN = range.m_values[13][1];
-    trib.state.issOut = range.m_values[14][1];
-    trib.state.pis = range.m_values[17][1];
-    trib.state.cofins = range.m_values[21][1];
+    //trib.state.irpjHW = range.m_values[1][1];
+    //trib.state.irpjSW = range.m_values[2][1];
+    //trib.state.csllHW = range.m_values[5][1];
+    //trib.state.csllSW = range.m_values[6][1];
+    //trib.state.cppHW = range.m_values[9][1];
+    //trib.state.cppSW = range.m_values[10][1];
+    //trib.state.issGYN = range.m_values[13][1];
+    //trib.state.issOut = range.m_values[14][1];
+    //trib.state.pis = range.m_values[17][1];
+    //trib.state.cofins = range.m_values[21][1];
 
     trib.state.tabelaIcms = ws.getRange("F3:AF29").load("values");
     await context.sync();
