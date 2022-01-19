@@ -1084,12 +1084,14 @@ async function getCellProperties(address) {
       
 
       for (i in listUF) {
-        let option = document.createElement("option");
-        option.value = listUF[i];
-        option.text = listUF[i];
+        if(listUF[i] == 'GO' ||listUF[i] == 'DF' ||listUF[i] == 'SP'){
+            let option = document.createElement("option");
+            option.value = listUF[i];
+            option.text = listUF[i];
 
-        combo1.appendChild(option);
-        //combo2.appendChild(option);
+            combo1.appendChild(option);
+            //combo2.appendChild(option);
+        }
       }
       combo1.value = "";
       combo2.value = "";
