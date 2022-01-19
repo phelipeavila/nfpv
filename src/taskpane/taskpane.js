@@ -404,20 +404,45 @@ async function atualizaMargem(){
 
 async function atualizaTributos() {
   Excel.run(async (context)=>{
-    const ws = context.workbook.worksheets.getItem("trib");
-    var  range = ws.getRange("A1:B22").load("values");
-    await context.sync();
+    const ws = context.workbook.worksheets.getItem(id.trib);
+    var  range = ws.getRange("B1:B22").load("values");
+    //await context.sync();
 
-    //trib.state.irpjHW = range.m_values[1][1];
-    //trib.state.irpjSW = range.m_values[2][1];
-    //trib.state.csllHW = range.m_values[5][1];
-    //trib.state.csllSW = range.m_values[6][1];
-    //trib.state.cppHW = range.m_values[9][1];
-    //trib.state.cppSW = range.m_values[10][1];
-    //trib.state.issGYN = range.m_values[13][1];
-    //trib.state.issOut = range.m_values[14][1];
-    //trib.state.pis = range.m_values[17][1];
-    //trib.state.cofins = range.m_values[21][1];
+    let valores_tributos = [[""],                 //1
+                            [trib.state.irpjHW],  //2
+                            [trib.state.irpjSW],  //3
+                            [""],                 //4
+                            [""],                 //5
+                            [trib.state.csllHW],  //6
+                            [trib.state.csllSW],  //7
+                            [""],                 //8
+                            [""],                 //9
+                            [0],                  //10
+                            [0],                  //11
+                            [""],                 //12
+                            [""],                 //13
+                            [trib.state.issGYN],  //14
+                            [trib.state.issOut],  //15
+                            [""],                 //16
+                            [""],                 //17
+                            [trib.state.pis],     //18
+                            [""],                 //19
+                            [""],                 //20
+                            [""],                 //21
+                            [trib.state.cofins]  //22
+                          ];
+
+    range.values = valores_tributos;
+    //range.values[1][1] = trib.state.irpjHW;
+    //range.values[2][1] = trib.state.irpjSW;
+    //range.values[5][1] = trib.state.csllHW;
+    //range.values[6][1] = trib.state.csllSW;
+    //range.values[9][1] = trib.state.cppHW;
+    //range.values[10][1] = trib.state.cppSW;
+    //range.values[13][1] = trib.state.issGYN;
+    //range.values[14][1] = trib.state.issOut;
+    //range.values[17][1] = trib.state.pis;
+    //range.values[21][1] = trib.state.cofins;
 
     trib.state.tabelaIcms = ws.getRange("F3:AF29").load("values");
     await context.sync();
