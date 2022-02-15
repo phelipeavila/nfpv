@@ -12,7 +12,7 @@
                 "nav-edicao": true,
                 "nav-faturamento": true,
                 "nav-margens": true,
-                "nav-posvenda": false,
+                "nav-posvenda": true,
                 "nav-config": false,
                 "edicao-formatar-planilha": true,
                 "faturamento-so-leitura": false,
