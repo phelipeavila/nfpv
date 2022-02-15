@@ -1874,19 +1874,28 @@ async function resumo(){
 }
 
 function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
-
+    log(`Início função calculaImpostos(${tipoItem}, ${subTrib}, ${anexoIX})`)
     var icms = calcICMS(tipoItem, false, subTrib, anexoIX);
     var difal = (p.state.ufOrig == p.state.ufDest ? 0: (icmsDaTabela(p.state.ufDest, p.state.ufDest) - icms) * !subTrib);
 
-    log(`icms: ${icms} -- difal: ${difal}`)
+    //log(`icms: ${icms} -- difal: ${difal}`)
 
     if (tipoItem == 'HW' || tipoItem == 'MAT'){
+        log(`total impostos = csllHW + irpjHW + pis + cofins + icms + difal`);
+        log(`total impostos = (${trib.state.csllHW}) + (${trib.state.irpjHW}) + (${trib.state.pis}) + (${trib.state.cofins}) +(${icms}) +(${difal})`);
+        log(`total impostos = ${trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal}`);
+        log(`Final função calculaImpostos`)
         return trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal;
     }else if (tipoItem == 'SW' || tipoItem == 'SV'){
+        log(`total impostos = csllSW + irjpSW + pis + cofins + issFora * (!éGoiania) + issGyn * (éGoiania)`)
+        log(`total impostos = ${trib.state.csllSW} + ${trib.state.irpjSW} + ${trib.state.pis} + ${trib.state.cofins} + ${trib.state.issOut * (!p.state.destGoiania)} + ${trib.state.issGYN * (p.state.destGoiania)}`)
+        log(`total impostos = ${trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania)}`);
+        log(`Final função calculaImpostos`)
         return trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania);
     }else{
         //valida se o tipoItem está dentre os valores permitidos
         log(`Erro: Valor inválido para tipoItem: ${tipoItem}`)
+        log(`Final função calculaImpostos`)
         return -1;
     }
 }
