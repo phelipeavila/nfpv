@@ -8,92 +8,152 @@
     },
     "acessos" : 
     {
+            "_legenda" : { 
+                "read": "r",
+                "write": "w",
+                "enabled": true,
+                "hidden": false
+            },
             "prevendas" : { 
                 "nav-edicao": true,
-                "nav-faturamento": true,
-                "nav-margens": true,
-                "nav-posvenda": true,
-                "nav-config": false,
-                "edicao-formatar-planilha": true,
-                "faturamento-so-leitura": false,
-                "faturamento-escrita": true,
-                "margens": true,
-                "comissoes": true,
-                "faturamento": true,
-                "resumo": false,
-                "siecon": false,
-                "cronograma": false,
-                "cadastros": false
+
+                "nav-cambio": true,
+                "content-cambio": "w",
+
+                "nav-margem": true,
+                "content-margem-input-margem": "w",
+                "content-margem-check-comissoes": "w",
+                "content-margem-input-comissoes": false,
+                "content-margem-input-tx-admin": "w",
+                "content-margem-input-sv-terc": false,
+                "content-margem-check-proj-estrategico": false,
+                "content-margem-check-politica-automatica": false,
+
+                "nav-fechamento": true,
+                "content-fechamento-btn-siecon": false,
+                "content-fechamento-btn-cronograma": "r",
+                "content-fechamento-btn-fechamento": true,
+
+                "nav-parametros": false,
+                "content-parametros-button-tributos": false,
+                "content-parametros-button-listas": false,
+                "content-parametros-button-param": false,
+                "content-parametros-param": false,
+                "content-parametros-input-tx-hw": false,
+                "content-parametros-input-tx-sw": false
             },
             "implantacao" : {
                 "nav-edicao": false,
-                "nav-faturamento": true,
-                "nav-margens": false,
-                "nav-posvenda": true,
-                "nav-config": false,
-                "edicao-formatar-planilha": false,
-                "faturamento-so-leitura": true,
-                "faturamento-escrita": false,
-                "margens": false,
-                "comissoes": false,
-                "faturamento": false,
-                "resumo": true,
-                "siecon": true,
-                "cronograma": true,
-                "cadastros": false
+
+                "nav-cambio": true,
+                "content-cambio": "r",
+
+                "nav-margem": false,
+                "content-margem-input-margem": "w",
+                "content-margem-check-comissoes": "w",
+                "content-margem-input-comissoes": false,
+                "content-margem-input-tx-admin": "w",
+                "content-margem-input-sv-terc": false,
+                "content-margem-check-proj-estrategico": false,
+                "content-margem-check-politica-automatica": false,
+
+                "nav-fechamento": true,
+                "content-fechamento-btn-siecon": true,
+                "content-fechamento-btn-cronograma": true,
+                "content-fechamento-btn-fechamento": true,
+
+                "nav-parametros": false,
+                "content-parametros-button-tributos": false,
+                "content-parametros-button-listas": false,
+                "content-parametros-button-param": false,
+                "content-parametros-param": false,
+                "content-parametros-input-tx-hw": false,
+                "content-parametros-input-tx-sw": false
             },
             "compras" : {
-                "nav-edicao": false,
-                "nav-faturamento": true,
-                "nav-margens": false,
-                "nav-posvenda": true,
-                "nav-config": false,
-                "edicao-formatar-planilha": false,
-                "faturamento-so-leitura": true,
-                "faturamento-escrita": false,
-                "margens": false,
-                "comissoes": false,
-                "faturamento": false,
-                "resumo": true,
-                "siecon": true,
-                "cronograma": true,
-                "cadastros": false
+                "nav-edicao": true,
+
+                "nav-cambio": true,
+                "content-cambio": "w",
+
+                "nav-margem": true,
+                "content-margem-input-margem": "w",
+                "content-margem-check-comissoes": "w",
+                "content-margem-input-comissoes": false,
+                "content-margem-input-tx-admin": "w",
+                "content-margem-input-sv-terc": false,
+                "content-margem-check-proj-estrategico": false,
+                "content-margem-check-politica-automatica": false,
+
+                "nav-fechamento": true,
+                "content-fechamento-btn-siecon": false,
+                "content-fechamento-btn-cronograma": false,
+                "content-fechamento-btn-fechamento": false,
+
+                "nav-parametros": false,
+                "content-parametros-button-tributos": false,
+                "content-parametros-button-listas": false,
+                "content-parametros-button-param": false,
+                "content-parametros-param": false,
+                "content-parametros-input-tx-hw": false,
+                "content-parametros-input-tx-sw": false
             },
             "comercial" : {
                 "nav-edicao": true,
-                "nav-faturamento": true,
-                "nav-margens": true,
-                "nav-posvenda": false,
-                "nav-config": false,
-                "edicao-formatar-planilha": true,
-                "faturamento-so-leitura": false,
-                "faturamento-escrita": true,
-                "margens": true,
-                "comissoes": true,
-                "faturamento": true,
-                "resumo": false,
-                "siecon": false,
-                "cronograma": false,
-                "cadastros": false
+
+                "nav-cambio": true,
+                "content-cambio": "w",
+
+                "nav-margem": true,
+                "content-margem-input-margem": "w",
+                "content-margem-check-comissoes": "w",
+                "content-margem-input-comissoes": false,
+                "content-margem-input-tx-admin": "w",
+                "content-margem-input-sv-terc": false,
+                "content-margem-check-proj-estrategico": false,
+                "content-margem-check-politica-automatica": false,
+
+                "nav-fechamento": false,
+                "content-fechamento-btn-siecon": false,
+                "content-fechamento-btn-cronograma": false,
+                "content-fechamento-btn-fechamento": false,
+
+                "nav-parametros": false,
+                "content-parametros-button-tributos": false,
+                "content-parametros-button-listas": false,
+                "content-parametros-button-param": false,
+                "content-parametros-param": false,
+                "content-parametros-input-tx-hw": false,
+                "content-parametros-input-tx-sw": false
             },
             "administrador" : {
                 "nav-edicao": true,
-                "nav-faturamento": true,
-                "nav-margens": true,
-                "nav-posvenda": true,
-                "nav-config": false,
-                "edicao-formatar-planilha": true,
-                "faturamento-so-leitura": false,
-                "faturamento-escrita": true,
-                "margens": true,
-                "comissoes": true,
-                "faturamento": true,
-                "resumo": true,
-                "siecon": true,
-                "cronograma": true,
-                "cadastros": true
+
+                "nav-cambio": true,
+                "content-cambio": "w",
+
+                "nav-margem": true,
+                "content-margem-input-margem": "w",
+                "content-margem-check-comissoes": "w",
+                "content-margem-input-comissoes": "w",
+                "content-margem-input-tx-admin": "w",
+                "content-margem-input-sv-terc": "w",
+                "content-margem-check-proj-estrategico": "w",
+                "content-margem-check-politica-automatica": "w",
+
+                "nav-fechamento": true,
+                "content-fechamento-btn-siecon": "r",
+                "content-fechamento-btn-cronograma": true,
+                "content-fechamento-btn-fechamento": true,
+
+                "nav-parametros": true,
+                "content-parametros-button-tributos": true,
+                "content-parametros-button-listas": true,
+                "content-parametros-button-param": true,
+                "content-parametros-param": true,
+                "content-parametros-input-tx-hw": "w",
+                "content-parametros-input-tx-sw": "w"
             }
     }
   
 }
-

@@ -1,52 +1,65 @@
 
-/***
- * Stores the key/value pair. Will use local storage or global variable to store
- * the values depending on which type the user selected.
- * 
- * @export
- * @param {string} key The key to store.
- * @param {string} value The value to store.
- */
-function setValueForKey(key, value) {
-    if (g.state.storageType === "globalvar") {
-      g.state.keys.push(key);
-      g.state.values.push(value);
-    } else {
-      window.localStorage.setItem(key, value);
-    }
-}
-
-/**
- * Gets the value for the given key from storage. Will retrieve the value
- * from local storage or global variable depending on which type of storage
- * the user selected.
- *
- * @export
- * @param {string} key The key to retrieve the value for
- * @returns {string} The value
- */
-function getValueForKey(key) {
-    let answer = "";
-    if (g.state.storageType === "globalvar") {
-      // get value from global variable
-      g.state.keys.forEach((element, index) => {
-        if (element === key) {
-          answer = g.state.values[index];
-        }
-      });
-    } else {
-      // get value from localStorage
-      answer = window.localStorage.getItem(key);
-    }
-    return answer;
-}
-
 function log(string){
     if (DEBUG){
         console.log(string);
     }
 }
 
+
+async function getFromSheet (sheet, range, load = 'values'){
+
+    return Excel.run(async (context)=>{
+      const ws = context.workbook.worksheets.getItem(sheet);
+      var  r = ws.getRange(range).load(load);
+      
+      switch (load) {
+        case 'values':
+            await context.sync();
+            return r.values;
+        case 'formulas':
+            await context.sync();
+            return r.formulas;
+        case 'text':
+            await context.sync();
+            return r.text;
+        case 'name':
+            ws.load('name');
+            await context.sync();
+            return ws.name;
+        case 'visibility':
+            ws.load('visibility');
+            await context.sync();
+            return ws.visibility;
+        default:
+            return r.values;
+      }
+    })
+  }
+  
+  async function writeOnSheet (data, sheet, range, load = 'values'){
+    return await Excel.run(async (context)=>{
+      const ws = context.workbook.worksheets.getItem(sheet);
+      var  r = ws.getRange(range).load(load);
+  
+      r.values = data;
+      switch (load) {
+        case 'values':
+          r.values = data;
+          break;
+        case 'formulas':
+          r.formulas = data;
+          break;
+        case 'text':
+          r.text = data; 
+          break;       
+        default:
+          r.values = data;
+          break;
+      }
+      return await context.sync();
+    });
+  }
+  
 
 //essa função é ativada sempre que o radio for alterado (onchange)
 function radioListener(){
@@ -79,14 +92,16 @@ function ExcelDateToStrDate(serialDate, offsetUTC) {
 }
 
 function JSDateToStrDate(jsdate) {
-  return jsdate.toISOString().split('T')[0];
+    if(jsdate == '') return ''
+    return jsdate.toISOString().split('T')[0];
 }
 
 function ExcelDateToJSDate(serialDate, offsetUTC) {
-  // serialDate is whole number of days since Dec 30, 1899
-  // offsetUTC is -(24 - your timezone offset)
-  // eu acrescentei o "-18" abaixo para que a função seja chamada com "-3"
-  return new Date(Date.UTC(0, 0, serialDate, -18 + offsetUTC));
+    if (serialDate == '') return '';
+    // serialDate is whole number of days since Dec 30, 1899
+    // offsetUTC is -(24 - your timezone offset)
+    // eu acrescentei o "-18" abaixo para que a função seja chamada com "-3"
+    return new Date(Date.UTC(0, 0, serialDate, -18 + offsetUTC));
 }
 
 function ontemStringHTML(){
@@ -121,23 +136,6 @@ async function buscaPTAX(moeda, dataFinal = ontemStringHTML(), intervalo = 5){
     
 }
 
-//o objeto input date do frontend retorna value no formato YYYY-MM-DD
-//essa função converte para formato EUA: MM-DD-YYY, que é aceito pela API do BC
-function dataHTMLparaEUA(dataHTML){
-    dataHTML = dataHTML.split('-');
-    dataHTML.push(dataHTML[0]);
-    dataHTML.shift();
-    return dataHTML.join('-');
-}
-
-//retorna uma string no formato YYY-MM-DD
-//o valor da data retornado é (dataFinal - intervalo)
-function calculaDataInicial (dataFinal, intervalo){
-    let df = dataFinal.split('-').map(Number);
-    let date = new Date(df[0], df[1] - 1, df[2]);
-    date.setDate(date.getDate() - intervalo);
-    return date.toISOString().split('T')[0];
-}
 
 
 //busca valor do cambio no BCB e atualiza a planilha e o frontend
@@ -1876,22 +1874,22 @@ async function resumo(){
 function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
     log(`Início função calculaImpostos(${tipoItem}, ${subTrib}, ${anexoIX})`)
     var icms = calcICMS(tipoItem, false, subTrib, anexoIX);
-    var difal = (p.state.ufOrig == p.state.ufDest ? 0: (icmsDaTabela(p.state.ufDest, p.state.ufDest) - icms) * !subTrib);
+    var difal = (param.ufOrig == param.ufDest ? 0: (icmsDaTabela(param.ufDest, param.ufDest) - icms) * !subTrib);
 
     //log(`icms: ${icms} -- difal: ${difal}`)
 
     if (tipoItem == 'HW' || tipoItem == 'MAT'){
         log(`total impostos = csllHW + irpjHW + pis + cofins + icms + difal`);
-        log(`total impostos = (${trib.state.csllHW}) + (${trib.state.irpjHW}) + (${trib.state.pis}) + (${trib.state.cofins}) +(${icms}) +(${difal})`);
-        log(`total impostos = ${trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal}`);
+        log(`total impostos = (${trib.csllHW}) + (${trib.irpjHW}) + (${trib.pis}) + (${trib.cofins}) +(${icms}) +(${difal})`);
+        log(`total impostos = ${trib.csllHW + trib.irpjHW + trib.pis + trib.cofins + icms + difal}`);
         log(`Final função calculaImpostos`)
-        return trib.state.csllHW + trib.state.irpjHW + trib.state.pis + trib.state.cofins + icms + difal;
+        return trib.csllHW + trib.irpjHW + trib.pis + trib.cofins + icms + difal;
     }else if (tipoItem == 'SW' || tipoItem == 'SV'){
         log(`total impostos = csllSW + irjpSW + pis + cofins + issFora * (!éGoiania) + issGyn * (éGoiania)`)
-        log(`total impostos = ${trib.state.csllSW} + ${trib.state.irpjSW} + ${trib.state.pis} + ${trib.state.cofins} + ${trib.state.issOut * (!p.state.destGoiania)} + ${trib.state.issGYN * (p.state.destGoiania)}`)
-        log(`total impostos = ${trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania)}`);
+        log(`total impostos = ${trib.csllSW} + ${trib.irpjSW} + ${trib.ste.pis} + ${trib.cofins} + ${trib.issOut * (!param.destGoiania)} + ${trib.issGYN * (param.destGoiania)}`)
+        log(`total impostos = ${trib.csllSW + trib.irpjSW + trib.pis + trib.cofins + trib.issOut * (!param.destGoiania) + trib.issGYN * (param.destGoiania)}`);
         log(`Final função calculaImpostos`)
-        return trib.state.csllSW + trib.state.irpjSW + trib.state.pis + trib.state.cofins + trib.state.issOut * (!p.state.destGoiania) + trib.state.issGYN * (p.state.destGoiania);
+        return trib.csllSW + trib.irpjSW + trib.pis + trib.cofins + trib.issOut * (!param.destGoiania) + trib.issGYN * (param.destGoiania);
     }else{
         //valida se o tipoItem está dentre os valores permitidos
         log(`Erro: Valor inválido para tipoItem: ${tipoItem}`)
@@ -2172,7 +2170,7 @@ async function removeLinha(){
 }
 
 async function moveParaDireita(){
-    const nome = document.getElementById("input-list-planilha").value;
+    const nome = document.getElementById('input-lista-planilhas').value;
     if (nome == '' ){
         return
     }
@@ -2203,7 +2201,7 @@ async function moveParaDireita(){
 }
 
 async function moveParaEsquerda(){
-    const nome = document.getElementById("input-list-planilha").value;
+    const nome = document.getElementById('input-lista-planilhas').value;
     if (nome == '' ){
         return
     }
@@ -2228,3 +2226,713 @@ async function moveParaEsquerda(){
         return context.sync();
     });
 }
+
+function inputMargemOnChange(){
+    log('inputMargemOnChange()')
+    var input_margem                = document.getElementById('content-margem-input-margem');
+    var check_comissao_dir_gov      = document.getElementById('content-margem-check-comissao-dir-gov');
+    var check_comissao_vp_comercial = document.getElementById('content-margem-check-comissao-vp-comercial');
+    var check_comissao_dir_priv     = document.getElementById('content-margem-check-comissao-dir-priv');
+    var check_comissao_ger_canais   = document.getElementById('content-margem-check-comissao-ger-canais');
+    var check_comissao_exec         = document.getElementById('content-margem-check-comissao-exec');
+    var check_comissao_prev         = document.getElementById('content-margem-check-comissao-prev');
+    var check_comissao_parc         = document.getElementById('content-margem-check-comissao-parc');
+    var input_comissao_dir_gov      = document.getElementById('content-margem-input-comissao-dir-gov');
+    var input_comissao_vp_comercial = document.getElementById('content-margem-input-comissao-vp-comercial');
+    var input_comissao_dir_priv     = document.getElementById('content-margem-input-comissao-dir-priv');
+    var input_comissao_ger_canais   = document.getElementById('content-margem-input-comissao-ger-canais');
+    var input_comissao_exec         = document.getElementById('content-margem-input-comissao-exec');
+    var input_comissao_prev         = document.getElementById('content-margem-input-comissao-prev');
+    var input_comissao_parc         = document.getElementById('content-margem-input-comissao-parc');
+    var input_tx_admin              = document.getElementById('content-margem-input-tx-admin');
+    var input_sv_terc               = document.getElementById('content-margem-input-sv-terc');
+    var check_proj_estrategico      = document.getElementById('content-margem-check-proj-estrategico');
+    var check_politica_automatica   = document.getElementById('content-margem-check-politica-automatica');
+
+
+    if (!check_politica_automatica.checked){
+        log('check_politica_automatica = false')
+        loadFromMargemToSheet();
+        return 0
+    }
+
+    if (check_comissao_dir_gov.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_dir_gov.value = comissoes.diretoria_governo[range] * 100;
+    }
+
+    if (check_comissao_dir_priv.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_dir_priv.value = comissoes.diretoria_privado[range] * 100;
+    }
+    
+    if (check_comissao_vp_comercial.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_vp_comercial.value = comissoes.vp_comercial[range] * 100;
+    }
+
+    if (check_comissao_ger_canais.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_ger_canais.value = comissoes.gerente_canais[range] * 100;
+    }
+
+    if (check_comissao_exec.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_exec.value = comissoes.executivo[range] * 100;
+    }
+
+    if (check_comissao_parc.checked){
+        let range = getRangeMargem(input_margem.value);
+        input_comissao_parc.value = comissoes.parceiro[range] * 100;
+    }
+
+    if (check_comissao_prev.checked){
+        (check_proj_estrategico.checked) ? 
+        input_comissao_prev.value = comissoes.prevendas['projeto_estrategico'] * 100 :
+        input_comissao_prev.value = comissoes.prevendas['projeto_comum'] * 100;
+    }
+    loadFromMargemToSheet();
+
+}
+
+function margemComissoesOnChange(){
+    var input_margem                = document.getElementById('content-margem-input-margem');
+    var check_comissao_dir_gov      = document.getElementById('content-margem-check-comissao-dir-gov');
+    var check_comissao_vp_comercial = document.getElementById('content-margem-check-comissao-vp-comercial');
+    var check_comissao_dir_priv     = document.getElementById('content-margem-check-comissao-dir-priv');
+    var check_comissao_ger_canais   = document.getElementById('content-margem-check-comissao-ger-canais');
+    var check_comissao_exec         = document.getElementById('content-margem-check-comissao-exec');
+    var check_comissao_prev         = document.getElementById('content-margem-check-comissao-prev');
+    var check_comissao_parc         = document.getElementById('content-margem-check-comissao-parc');
+    var check_proj_estrategico      = document.getElementById('content-margem-check-proj-estrategico');
+    var check_politica_automatica   = document.getElementById('content-margem-check-politica-automatica');
+
+    var input_comissao_dir_gov      = document.getElementById('content-margem-input-comissao-dir-gov');
+    var input_comissao_vp_comercial = document.getElementById('content-margem-input-comissao-vp-comercial');
+    var input_comissao_dir_priv     = document.getElementById('content-margem-input-comissao-dir-priv');
+    var input_comissao_ger_canais   = document.getElementById('content-margem-input-comissao-ger-canais');
+    var input_comissao_exec         = document.getElementById('content-margem-input-comissao-exec');
+    var input_comissao_prev         = document.getElementById('content-margem-input-comissao-prev');
+    var input_comissao_parc         = document.getElementById('content-margem-input-comissao-parc');
+    var range = getRangeMargem(input_margem.value);
+
+    if (check_comissao_dir_gov.checked){
+            if (check_politica_automatica.checked) input_comissao_dir_gov.value = comissoes.diretoria_governo[range] * 100;
+    } else  input_comissao_dir_gov.value = 0;
+
+    if (check_comissao_dir_priv.checked){
+        if (check_politica_automatica.checked) input_comissao_dir_priv.value = comissoes.diretoria_privado[range] * 100;
+    } else  input_comissao_dir_priv.value = 0;
+    
+    if (check_comissao_vp_comercial.checked){
+        if (check_politica_automatica.checked) input_comissao_vp_comercial.value = comissoes.vp_comercial[range] * 100;
+    } else  input_comissao_vp_comercial.value = 0;
+
+    if (check_comissao_ger_canais.checked){
+        if (check_politica_automatica.checked) input_comissao_ger_canais.value = comissoes.gerente_canais[range] * 100;
+    } else  input_comissao_ger_canais.value = 0;
+
+    if (check_comissao_exec.checked){
+        if (check_politica_automatica.checked) input_comissao_exec.value = comissoes.executivo[range] * 100;
+    } else  input_comissao_exec.value = 0;
+
+    if (check_comissao_parc.checked){
+        if (check_politica_automatica.checked) input_comissao_parc.value = comissoes.parceiro[range] * 100;
+    } else  input_comissao_parc.value = 0;
+
+    if (check_comissao_prev.checked){
+        if (check_politica_automatica.checked) {
+            (check_proj_estrategico.checked) ? 
+            input_comissao_prev.value = comissoes.prevendas['projeto_estrategico'] * 100 :
+            input_comissao_prev.value = comissoes.prevendas['projeto_comum'] * 100;
+        }
+    } else {
+        input_comissao_prev.value = 0;
+    }
+
+    loadFromMargemToSheet();
+}
+
+
+function getRangeMargem(x) {
+    if (x <= 0) return 'equal_0';
+    if (0 < x && x < 10) return 'btw_0_10';
+    if (x == 10) return 'equal_10';
+    if (10 < x && x < 15) return 'btw_10_15';
+    if (x == 15) return 'equal_15';
+    if (15 < x && x < 20) return 'btw_15_20';
+    if (x == 20) return 'equal_20';
+    if (20 < x && x < 25) return 'btw_20_25';
+    if (x == 25) return 'equal_25';
+    if (25 < x && x < 30) return 'btw_25_30';
+    if (x == 30) return 'equal_30';
+    if (30 < x && x < 35) return 'btw_30_35';
+    if (x == 35) return 'equal_35';
+    if (35 < x && x < 40) return 'btw_35_40';
+    if (x == 40) return 'equal_40';
+    if (40 < x && x < 45) return 'btw_40_45';
+    if (x == 45) return 'equal_45';
+    if (45 < x && x < 50) return 'btw_45_50';
+    if (x >= 50) return 'equal_gr_50';
+}
+
+
+//o objeto input date do frontend retorna value no formato YYYY-MM-DD
+//essa função converte para formato EUA: MM-DD-YYY, que é aceito pela API do BC
+function dataHTMLparaEUA(dataHTML){
+    dataHTML = dataHTML.split('-');
+    dataHTML.push(dataHTML[0]);
+    dataHTML.shift();
+    return dataHTML.join('-');
+}
+
+//retorna uma string no formato YYYY-MM-DD
+//o valor da data retornado é (dataFinal - intervalo)
+function calculaDataInicial (dataFinal, intervalo){
+    let df = dataFinal.split('-').map(Number);
+    let date = new Date(df[0], df[1] - 1, df[2]);
+    date.setDate(date.getDate() - intervalo);
+    return date.toISOString().split('T')[0];
+}
+
+//essa função busca a cotação da moeda em um determinado dia e em um intervalo de dias atrás.
+//ela retorna a cotação mais próxima da data passada como parâmetro.
+//o intervalo é necessário pois em dias não comerciais, não há cotação. Para evitar que
+//a busca retorne vazia, o intervalo garante que haverá cotações válidas.
+async function ptaxQuotation(moeda, dataFinal = ontemStringHTML(), intervalo = 5){
+  
+    let obj = null;
+    var dataInicial = calculaDataInicial (dataFinal, intervalo);
+    dataInicial = dataHTMLparaEUA(dataInicial);
+    dataFinal = dataHTMLparaEUA(dataFinal);
+    let url = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoMoedaPeriodo(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@moeda='" + moeda + "'&@dataInicial='" + dataInicial + "'&@dataFinalCotacao='" + dataFinal + "'&$top=100&$filter=tipoBoletim%20eq%20'Fechamento'&$orderby=dataHoraCotacao%20desc&$format=json&$select=cotacaoVenda,dataHoraCotacao,tipoBoletim";
+  
+    try {
+        obj = await (await fetch(url)).json();
+    } catch(e) {
+        log('error');
+        log(url);
+    }
+        
+    return obj.value[0].cotacaoVenda;
+    //return obj;   
+  }
+
+  
+async function saveParamToSheet(){
+    const range_param_values = 'B1:B29';
+    var array_param = [];
+    
+    array_param = 
+    [
+      [param.tipoFatur],
+      [param.margem],
+      [param.comissaoDirGov],
+      [param.comissaoExec],
+      [param.comissaoPrev],
+      [param.comissaoParc],
+      [param.txAdm],
+      [param.svTerc],
+      [param.aplicarComissaoDirGov],
+      [param.aplicarComissaoExec],
+      [param.aplicarComissaoPrev],
+      [param.aplicarComissaoParc],
+      [param.ufOrig],
+      [param.ufDest],
+      [param.destGoiania],
+      [param.zerarICMS],
+      [param.txImpHW],
+      [param.txImpSW],
+      [JSDateToStrDate(param.dataCambio)],
+      [param.dolarPTAX],
+      [param.euroPTAX],
+      [param.politicaAutom],
+      [param.comissaoDirPriv],
+      [param.comissaoVP],
+      [param.comissaoGC],
+      [param.aplicarComissaoDirPriv],
+      [param.aplicarComissaoVP],
+      [param.aplicarComissaoGC],
+      [param.projetoEstrategico]
+    ];
+  
+    await writeOnSheet(array_param, id.param, range_param_values, 'values')
+  }
+
+//GV -> frontend (menu parametros)
+async function writeParametrosOnFrontend(){
+
+    var input_tx_import_hw = document.getElementById('content-parametros-input-tx-hw')
+    var input_tx_import_sw = document.getElementById('content-parametros-input-tx-sw')
+  
+    input_tx_import_hw.value = param.txImpHW;
+    input_tx_import_sw.value = param.txImpSW;
+}
+  
+//planilha -> frontend (edição - nomes das planilhas customizadas)
+async function writeSheetsNamesOnFrontend(){
+    var datalist_planilhas = document.getElementById('datalist-planilhas');
+    datalist_planilhas.innerHTML = '';
+
+    for (i in id.servicos){
+        if (i != 0) {
+        let option = document.createElement('option');
+        option.value = await getFromSheet(id.servicos[i], '', 'name');
+        option.text = 'Planilha de Serviços';
+        datalist_planilhas.appendChild(option);
+        }
+    }
+
+    for (i in id.custom){
+        let option = document.createElement('option');
+        option.value = await getFromSheet(id.custom[i], '', 'name');
+        option.text = 'Planilha Customizada';
+        datalist_planilhas.appendChild(option);
+    }
+}
+
+//GV -> frontend (cambio e faturamento)
+function writeCambioOnFrontend(){
+var data_cambio = document.getElementById('content-cambio-input-data')
+var input_usd = document.getElementById('content-cambio-input-usd')
+var input_eur = document.getElementById('content-cambio-input-eur')
+var select_uf_orig  = document.getElementById('content-cambio-select-uf-orig')
+var select_uf_dest = document.getElementById('content-cambio-select-uf-dest')
+var select_tipo_faturamento  = document.getElementById('content-cambio-select-tipo-fat')
+var check_incentivo_icms = document.getElementById('content-cambio-check-icms')
+var select_destino_goiania = document.getElementById('content-cambio-dest-gyn')
+
+//carrega lista de UF Destinos
+for (i in listUF) {
+    let option = document.createElement("option");
+    option.value = listUF[i];
+    option.text = listUF[i];
+    select_uf_dest.appendChild(option);
+}
+
+//carrega lista de UF Origens
+for (i in listUF) {
+    if(listUF[i] == 'GO' ||listUF[i] == 'DF' ||listUF[i] == 'SP'){
+        let option = document.createElement("option");
+        option.value = listUF[i];
+        option.text = listUF[i];
+        select_uf_orig.appendChild(option);
+    }
+}
+
+select_uf_orig.value = param.ufOrig;
+select_uf_dest.value = param.ufDest;
+data_cambio.value = JSDateToStrDate(param.dataCambio);
+data_cambio.max = ontemStringHTML();
+input_usd.value = param.dolarPTAX;
+input_eur.value = param.euroPTAX;
+select_tipo_faturamento = param.tipoFatur;
+check_incentivo_icms.checked = param.zerarICMS;
+select_destino_goiania.checked = param.destGoiania;
+}
+
+//GV -> frontend (margem e comissoes)
+function writeMargemOnFrontend(){
+var input_margem                = document.getElementById('content-margem-input-margem');
+var check_comissao_dir_gov      = document.getElementById('content-margem-check-comissao-dir-gov');
+var check_comissao_vp_comercial = document.getElementById('content-margem-check-comissao-vp-comercial');
+var check_comissao_dir_priv     = document.getElementById('content-margem-check-comissao-dir-priv');
+var check_comissao_ger_canais   = document.getElementById('content-margem-check-comissao-ger-canais');
+var check_comissao_exec         = document.getElementById('content-margem-check-comissao-exec');
+var check_comissao_prev         = document.getElementById('content-margem-check-comissao-prev');
+var check_comissao_parc         = document.getElementById('content-margem-check-comissao-parc');
+var input_comissao_dir_gov      = document.getElementById('content-margem-input-comissao-dir-gov');
+var input_comissao_vp_comercial = document.getElementById('content-margem-input-comissao-vp-comercial');
+var input_comissao_dir_priv     = document.getElementById('content-margem-input-comissao-dir-priv');
+var input_comissao_ger_canais   = document.getElementById('content-margem-input-comissao-ger-canais');
+var input_comissao_exec         = document.getElementById('content-margem-input-comissao-exec');
+var input_comissao_prev         = document.getElementById('content-margem-input-comissao-prev');
+var input_comissao_parc         = document.getElementById('content-margem-input-comissao-parc');
+var input_tx_admin              = document.getElementById('content-margem-input-tx-admin');
+var input_sv_terc               = document.getElementById('content-margem-input-sv-terc');
+var check_proj_estrategico      = document.getElementById('content-margem-check-proj-estrategico');
+var check_politica_automatica   = document.getElementById('content-margem-check-politica-automatica');
+
+
+input_margem.value = param.margem * 100;
+input_comissao_dir_gov.value = param.comissaoDirGov * 100;
+input_comissao_vp_comercial.value = param.comissaoVP * 100;
+input_comissao_dir_priv.value = param.comissaoDirPriv * 100;
+input_comissao_ger_canais.value = param.comissaoGC * 100;
+input_comissao_exec.value = param.comissaoExec * 100;
+input_comissao_prev.value = param.comissaoPrev * 100;
+input_comissao_parc.value = param.comissaoParc * 100;
+input_tx_admin.value = param.txAdm * 100;
+input_sv_terc.value = param.svTerc * 100;
+check_comissao_dir_gov.checked = param.aplicarComissaoDirGov;
+check_comissao_vp_comercial.checked = param.aplicarComissaoVP;
+check_comissao_dir_priv .checked = param.aplicarComissaoDirPriv;
+check_comissao_ger_canais.checked = param.aplicarComissaoGC;
+check_comissao_exec.checked = param.aplicarComissaoExec;
+check_comissao_prev.checked = param.aplicarComissaoPrev;
+check_comissao_parc.checked = param.aplicarComissaoParc;
+check_proj_estrategico.checked = param.projetoEstrategico;
+check_politica_automatica.checked = param.politicaAutom;
+}
+
+//frontend (menu edicao)-> GV -> planilha
+function loadFromEdicaoToSheet(){
+    return 0
+  }
+  
+//frontend (menu cambio e faturamento)-> GV -> planilha
+async function loadFromCambioToSheet(){
+var data_cambio               = document.getElementById('content-cambio-input-data')
+var input_usd                 = document.getElementById('content-cambio-input-usd')
+var input_eur                 = document.getElementById('content-cambio-input-eur')
+var select_uf_orig            = document.getElementById('content-cambio-select-uf-orig')
+var select_uf_dest            = document.getElementById('content-cambio-select-uf-dest')
+var select_tipo_faturamento   = document.getElementById('content-cambio-select-tipo-fat')
+var check_incentivo_icms      = document.getElementById('content-cambio-check-icms')
+var select_destino_goiania    = document.getElementById('content-cambio-dest-gyn')
+
+data_cambio.value == '' ? param.dataCambio = '': param.dataCambio = new Date(data_cambio.value + 'T00:00:00');
+param.dolarPTAX                 = input_usd.value;
+param.euroPTAX                  = input_eur.value;
+param.ufOrig                    = select_uf_orig.value;
+param.ufDest                    = select_uf_dest.value;
+param.tipoFatur                 = select_tipo_faturamento.value;
+param.zerarICMS                 = check_incentivo_icms.checked;
+param.destGoiania               = select_destino_goiania.checked;
+
+await saveParamToSheet();
+
+}
+
+//frontend (menu margem e comissoes)-> GV -> planilha
+async function loadFromMargemToSheet(){
+var input_margem                = document.getElementById('content-margem-input-margem');
+var check_comissao_dir_gov      = document.getElementById('content-margem-check-comissao-dir-gov');
+var check_comissao_vp_comercial = document.getElementById('content-margem-check-comissao-vp-comercial');
+var check_comissao_dir_priv     = document.getElementById('content-margem-check-comissao-dir-priv');
+var check_comissao_ger_canais   = document.getElementById('content-margem-check-comissao-ger-canais');
+var check_comissao_exec         = document.getElementById('content-margem-check-comissao-exec');
+var check_comissao_prev         = document.getElementById('content-margem-check-comissao-prev');
+var check_comissao_parc         = document.getElementById('content-margem-check-comissao-parc');
+var input_comissao_dir_gov      = document.getElementById('content-margem-input-comissao-dir-gov');
+var input_comissao_vp_comercial = document.getElementById('content-margem-input-comissao-vp-comercial');
+var input_comissao_dir_priv     = document.getElementById('content-margem-input-comissao-dir-priv');
+var input_comissao_ger_canais   = document.getElementById('content-margem-input-comissao-ger-canais');
+var input_comissao_exec         = document.getElementById('content-margem-input-comissao-exec');
+var input_comissao_prev         = document.getElementById('content-margem-input-comissao-prev');
+var input_comissao_parc         = document.getElementById('content-margem-input-comissao-parc');
+var input_tx_admin              = document.getElementById('content-margem-input-tx-admin');
+var input_sv_terc               = document.getElementById('content-margem-input-sv-terc');
+var check_proj_estrategico      = document.getElementById('content-margem-check-proj-estrategico');
+var check_politica_automatica   = document.getElementById('content-margem-check-politica-automatica');
+
+param.margem                  = arred4(input_margem.value / 100);
+param.comissaoDirGov          = arred4(input_comissao_dir_gov.value / 100);
+param.comissaoVP              = arred4(input_comissao_vp_comercial.value / 100);
+param.comissaoDirPriv         = arred4(input_comissao_dir_priv.value / 100);
+param.comissaoGC              = arred4(input_comissao_ger_canais.value / 100);
+param.comissaoExec            = arred4(input_comissao_exec.value / 100);
+param.comissaoPrev            = arred4(input_comissao_prev.value / 100);
+param.comissaoParc            = arred4(input_comissao_parc.value / 100);
+param.txAdm                   = arred4(input_tx_admin.value / 100);
+param.svTerc                  = arred4(input_sv_terc.value / 100);
+param.aplicarComissaoDirGov   = check_comissao_dir_gov.checked;
+param.aplicarComissaoVP       = check_comissao_vp_comercial.checked;
+param.aplicarComissaoDirPriv  = check_comissao_dir_priv .checked;
+param.aplicarComissaoGC       = check_comissao_ger_canais.checked;
+param.aplicarComissaoExec     = check_comissao_exec.checked;
+param.aplicarComissaoPrev     = check_comissao_prev.checked;
+param.aplicarComissaoParc     = check_comissao_parc.checked;
+param.projetoEstrategico      = check_proj_estrategico.checked;
+param.politicaAutom           = check_politica_automatica.checked;
+
+saveParamToSheet();
+}
+
+//frontend (menu parametros)-> GV -> planilha
+async function loadFromParametrosToSheet(){
+
+var input_tx_import_hw = document.getElementById('content-parametros-input-tx-hw')
+var input_tx_import_sw = document.getElementById('content-parametros-input-tx-sw')
+
+param.txImpHW = input_tx_import_hw.value;
+param.txImpSW = input_tx_import_sw.value;
+
+saveParamToSheet();
+
+}
+
+  async function loadFromParamSheetV1(){
+    const range_param_values = 'B1:B29';
+    const range_id_sv_sheet = 'V3:V12';
+    const range_id_custom_sheet = 'Y3:Y12';
+    //const range_policy = 'F2:K24';
+  
+    var param_values = await getFromSheet(id.param, range_param_values, 'values')
+  
+    param.hoje                    = new Date();
+    param.tipoFatur               = param_values[0][0];
+    param.margem                  = param_values[1][0];
+    param.comissaoDirGov          = param_values[2][0];
+    param.comissaoExec            = param_values[3][0];
+    param.comissaoPrev            = param_values[4][0];
+    param.comissaoParc            = param_values[5][0];
+    param.txAdm                   = param_values[6][0];
+    param.svTerc                  = param_values[7][0];
+    param.aplicarComissaoDirGov   = param_values[8][0];
+    param.aplicarComissaoExec     = param_values[9][0];
+    param.aplicarComissaoPrev     = param_values[10][0];
+    param.aplicarComissaoParc     = param_values[11][0];
+    param.ufOrig                  = param_values[12][0];
+    param.ufDest                  = param_values[13][0];
+    param.destGoiania             = param_values[14][0];
+    param.zerarICMS               = param_values[15][0];
+    param.txImpHW                 = param_values[16][0];
+    param.txImpSW                 = param_values[17][0];
+    param.dataCambio              = ExcelDateToJSDate(param_values[18][0], -3);
+    param.dolarPTAX               = param_values[19][0];
+    param.euroPTAX                = param_values[20][0];
+    param.politicaAutom           = param_values[21][0];
+    param.comissaoDirPriv         = param_values[22][0];
+    param.comissaoVP              = param_values[23][0];
+    param.comissaoGC              = param_values[24][0];
+    param.aplicarComissaoDirPriv  = param_values[25][0];
+    param.aplicarComissaoVP       = param_values[26][0];
+    param.aplicarComissaoGC       = param_values[27][0];
+    param.projetoEstrategico      = param_values[28][0];
+    
+  
+    var id_sv_sheet = await getFromSheet(id.param, range_id_sv_sheet, 'values')
+    
+    for (i in id_sv_sheet){
+      if (id_sv_sheet[i] != ''){
+        id.servicos.push(id_sv_sheet[i][0]);
+      }
+    }
+    
+    var id_custom_sheet = await getFromSheet(id.param, range_id_custom_sheet, 'values')
+  
+    for (i in id_custom_sheet){
+      if (id_custom_sheet[i] != ''){
+        id.custom.push(id_custom_sheet[i][0]);
+      }
+    }
+  }
+  
+  async function loadFromParamSheetV2(){
+    const range_param_values = 'B1:B29';
+    const range_id_sv_sheet = 'V3:V12';
+    const range_id_custom_sheet = 'Y3:Y12';
+    const range_policy = 'F2:K24';
+  
+    var param_values = await getFromSheet(id.param, range_param_values, 'values')
+  
+    param.hoje                    = new Date();
+    param.tipoFatur               = param_values[0][0];
+    param.margem                  = param_values[1][0];
+    param.comissaoDirGov          = param_values[2][0];
+    param.comissaoExec            = param_values[3][0];
+    param.comissaoPrev            = param_values[4][0];
+    param.comissaoParc            = param_values[5][0];
+    param.txAdm                   = param_values[6][0];
+    param.svTerc                  = param_values[7][0];
+    param.aplicarComissaoDirGov   = param_values[8][0];
+    param.aplicarComissaoExec     = param_values[9][0];
+    param.aplicarComissaoPrev     = param_values[10][0];
+    param.aplicarComissaoParc     = param_values[11][0];
+    param.ufOrig                  = param_values[12][0];
+    param.ufDest                  = param_values[13][0];
+    param.destGoiania             = param_values[14][0];
+    param.zerarICMS               = param_values[15][0];
+    param.txImpHW                 = param_values[16][0];
+    param.txImpSW                 = param_values[17][0];
+    param.dataCambio              = ExcelDateToJSDate(param_values[18][0], -3);
+    param.dolarPTAX               = param_values[19][0];
+    param.euroPTAX                = param_values[20][0];
+    param.politicaAutom           = param_values[21][0];
+    param.comissaoDirPriv         = param_values[22][0];
+    param.comissaoVP              = param_values[23][0];
+    param.comissaoGC              = param_values[24][0];
+    param.aplicarComissaoDirPriv  = param_values[25][0];
+    param.aplicarComissaoVP       = param_values[26][0];
+    param.aplicarComissaoGC       = param_values[27][0];
+    param.projetoEstrategico      = param_values[28][0];
+  
+    var policy_values = await getFromSheet(id.param, range_policy, 'values');
+  
+    comissoes.diretoria_governo.equal_0     = policy_values[0][0];
+    comissoes.diretoria_governo.btw_0_10    = policy_values[1][0];
+    comissoes.diretoria_governo.equal_10    = policy_values[2][0];
+    comissoes.diretoria_governo.btw_10_15   = policy_values[3][0];
+    comissoes.diretoria_governo.equal_15    = policy_values[4][0];
+    comissoes.diretoria_governo.btw_15_20   = policy_values[5][0];
+    comissoes.diretoria_governo.equal_20    = policy_values[6][0];
+    comissoes.diretoria_governo.btw_20_25   = policy_values[7][0];
+    comissoes.diretoria_governo.equal_25    = policy_values[8][0];
+    comissoes.diretoria_governo.btw_25_30   = policy_values[9][0];
+    comissoes.diretoria_governo.equal_30    = policy_values[10][0];
+    comissoes.diretoria_governo.btw_30_35   = policy_values[11][0];
+    comissoes.diretoria_governo.equal_35    = policy_values[12][0];
+    comissoes.diretoria_governo.btw_35_40   = policy_values[13][0];
+    comissoes.diretoria_governo.equal_40    = policy_values[14][0];
+    comissoes.diretoria_governo.btw_40_45   = policy_values[15][0];
+    comissoes.diretoria_governo.equal_45    = policy_values[16][0];
+    comissoes.diretoria_governo.btw_45_50   = policy_values[17][0];
+    comissoes.diretoria_governo.equal_gr_50 = policy_values[18][0];
+  
+    comissoes.diretoria_privado.equal_0     = policy_values[0][1];
+    comissoes.diretoria_privado.btw_0_10    = policy_values[1][1];
+    comissoes.diretoria_privado.equal_10    = policy_values[2][1];
+    comissoes.diretoria_privado.btw_10_15   = policy_values[3][1];
+    comissoes.diretoria_privado.equal_15    = policy_values[4][1];
+    comissoes.diretoria_privado.btw_15_20   = policy_values[5][1];
+    comissoes.diretoria_privado.equal_20    = policy_values[6][1];
+    comissoes.diretoria_privado.btw_20_25   = policy_values[7][1];
+    comissoes.diretoria_privado.equal_25    = policy_values[8][1];
+    comissoes.diretoria_privado.btw_25_30   = policy_values[9][1];
+    comissoes.diretoria_privado.equal_30    = policy_values[10][1];
+    comissoes.diretoria_privado.btw_30_35   = policy_values[11][1];
+    comissoes.diretoria_privado.equal_35    = policy_values[12][1];
+    comissoes.diretoria_privado.btw_35_40   = policy_values[13][1];
+    comissoes.diretoria_privado.equal_40    = policy_values[14][1];
+    comissoes.diretoria_privado.btw_40_45   = policy_values[15][1];
+    comissoes.diretoria_privado.equal_45    = policy_values[16][1];
+    comissoes.diretoria_privado.btw_45_50   = policy_values[17][1];
+    comissoes.diretoria_privado.equal_gr_50 = policy_values[18][1];
+  
+    comissoes.vp_comercial.equal_0     = policy_values[0][2];
+    comissoes.vp_comercial.btw_0_10    = policy_values[1][2];
+    comissoes.vp_comercial.equal_10    = policy_values[2][2];
+    comissoes.vp_comercial.btw_10_15   = policy_values[3][2];
+    comissoes.vp_comercial.equal_15    = policy_values[4][2];
+    comissoes.vp_comercial.btw_15_20   = policy_values[5][2];
+    comissoes.vp_comercial.equal_20    = policy_values[6][2];
+    comissoes.vp_comercial.btw_20_25   = policy_values[7][2];
+    comissoes.vp_comercial.equal_25    = policy_values[8][2];
+    comissoes.vp_comercial.btw_25_30   = policy_values[9][2];
+    comissoes.vp_comercial.equal_30    = policy_values[10][2];
+    comissoes.vp_comercial.btw_30_35   = policy_values[11][2];
+    comissoes.vp_comercial.equal_35    = policy_values[12][2];
+    comissoes.vp_comercial.btw_35_40   = policy_values[13][2];
+    comissoes.vp_comercial.equal_40    = policy_values[14][2];
+    comissoes.vp_comercial.btw_40_45   = policy_values[15][2];
+    comissoes.vp_comercial.equal_45    = policy_values[16][2];
+    comissoes.vp_comercial.btw_45_50   = policy_values[17][2];
+    comissoes.vp_comercial.equal_gr_50 = policy_values[18][2];
+  
+    comissoes.gerente_canais.equal_0     = policy_values[0][3];
+    comissoes.gerente_canais.btw_0_10    = policy_values[1][3];
+    comissoes.gerente_canais.equal_10    = policy_values[2][3];
+    comissoes.gerente_canais.btw_10_15   = policy_values[3][3];
+    comissoes.gerente_canais.equal_15    = policy_values[4][3];
+    comissoes.gerente_canais.btw_15_20   = policy_values[5][3];
+    comissoes.gerente_canais.equal_20    = policy_values[6][3];
+    comissoes.gerente_canais.btw_20_25   = policy_values[7][3];
+    comissoes.gerente_canais.equal_25    = policy_values[8][3];
+    comissoes.gerente_canais.btw_25_30   = policy_values[9][3];
+    comissoes.gerente_canais.equal_30    = policy_values[10][3];
+    comissoes.gerente_canais.btw_30_35   = policy_values[11][3];
+    comissoes.gerente_canais.equal_35    = policy_values[12][3];
+    comissoes.gerente_canais.btw_35_40   = policy_values[13][3];
+    comissoes.gerente_canais.equal_40    = policy_values[14][3];
+    comissoes.gerente_canais.btw_40_45   = policy_values[15][3];
+    comissoes.gerente_canais.equal_45    = policy_values[16][3];
+    comissoes.gerente_canais.btw_45_50   = policy_values[17][3];
+    comissoes.gerente_canais.equal_gr_50 = policy_values[18][3];
+  
+    comissoes.executivo.equal_0     = policy_values[0][4];
+    comissoes.executivo.btw_0_10    = policy_values[1][4];
+    comissoes.executivo.equal_10    = policy_values[2][4];
+    comissoes.executivo.btw_10_15   = policy_values[3][4];
+    comissoes.executivo.equal_15    = policy_values[4][4];
+    comissoes.executivo.btw_15_20   = policy_values[5][4];
+    comissoes.executivo.equal_20    = policy_values[6][4];
+    comissoes.executivo.btw_20_25   = policy_values[7][4];
+    comissoes.executivo.equal_25    = policy_values[8][4];
+    comissoes.executivo.btw_25_30   = policy_values[9][4];
+    comissoes.executivo.equal_30    = policy_values[10][4];
+    comissoes.executivo.btw_30_35   = policy_values[11][4];
+    comissoes.executivo.equal_35    = policy_values[12][4];
+    comissoes.executivo.btw_35_40   = policy_values[13][4];
+    comissoes.executivo.equal_40    = policy_values[14][4];
+    comissoes.executivo.btw_40_45   = policy_values[15][4];
+    comissoes.executivo.equal_45    = policy_values[16][4];
+    comissoes.executivo.btw_45_50   = policy_values[17][4];
+    comissoes.executivo.equal_gr_50 = policy_values[18][4];
+  
+    comissoes.parceiro.equal_0     = policy_values[0][5];
+    comissoes.parceiro.btw_0_10    = policy_values[1][5];
+    comissoes.parceiro.equal_10    = policy_values[2][5];
+    comissoes.parceiro.btw_10_15   = policy_values[3][5];
+    comissoes.parceiro.equal_15    = policy_values[4][5];
+    comissoes.parceiro.btw_15_20   = policy_values[5][5];
+    comissoes.parceiro.equal_20    = policy_values[6][5];
+    comissoes.parceiro.btw_20_25   = policy_values[7][5];
+    comissoes.parceiro.equal_25    = policy_values[8][5];
+    comissoes.parceiro.btw_25_30   = policy_values[9][5];
+    comissoes.parceiro.equal_30    = policy_values[10][5];
+    comissoes.parceiro.btw_30_35   = policy_values[11][5];
+    comissoes.parceiro.equal_35    = policy_values[12][5];
+    comissoes.parceiro.btw_35_40   = policy_values[13][5];
+    comissoes.parceiro.equal_40    = policy_values[14][5];
+    comissoes.parceiro.btw_40_45   = policy_values[15][5];
+    comissoes.parceiro.equal_45    = policy_values[16][5];
+    comissoes.parceiro.btw_45_50   = policy_values[17][5];
+    comissoes.parceiro.equal_gr_50 = policy_values[18][5];
+  
+    comissoes.prevendas.projeto_comum       = policy_values[21][0];
+    comissoes.prevendas.projeto_estrategico = policy_values[22][0];
+  
+    var id_sv_sheet = await getFromSheet(id.param, range_id_sv_sheet, 'values')
+    
+    for (i in id_sv_sheet){
+      if (id_sv_sheet[i] != ''){
+        id.servicos.push(id_sv_sheet[i][0]);
+      }
+    }
+    
+    var id_custom_sheet = await getFromSheet(id.param, range_id_custom_sheet, 'values')
+  
+    for (i in id_custom_sheet){
+      if (id_custom_sheet[i] != ''){
+        id.custom.push(id_custom_sheet[i][0]);
+      }
+    }
+  }
+
+  async function loadFromTribSheetV1(){
+    const range_trib_values = 'B2:B29';
+    const range_tabela_icms_values = 'F3:AF29';
+  
+    var trib_values = await getFromSheet(id.trib, range_trib_values, 'values');
+  
+    trib.irpjHW       = trib_values[0][0]
+    trib.irpjSW       = trib_values[1][0]
+    trib.csllHW       = trib_values[4][0]
+    trib.csllSW       = trib_values[5][0]
+    trib.cppHW        = trib_values[8][0]
+    trib.cppSW        = trib_values[9][0]
+    trib.issGYN       = trib_values[12][0]
+    trib.issOut       = trib_values[13][0]
+    trib.pis          = trib_values[16][0]
+    trib.cofins       = trib_values[20][0]
+  
+    //valida se há informação na celula trib!B29. Se não tiver, escreve 11%.
+    //em versões mais antigas da FPV, esse campo não existia
+    if (trib_values[27][0] == ''){
+      trib.fatDireto = 0.11
+      await writeOnSheet(0.11, id.trib, 'B29', 'values')
+    } else{
+      trib.fatDireto = trib_values[27][0];
+    }
+  
+    var tabela_icms_values = await getFromSheet(id.trib, range_tabela_icms_values, 'values')
+  
+    trib.tabelaIcms = tabela_icms_values;
+  
+  }
+
+  async function loadFromTribSheetV2(){
+      await loadFromTribSheetV1();
+  }
+  

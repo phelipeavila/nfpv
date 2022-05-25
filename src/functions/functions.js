@@ -123,27 +123,27 @@ function setValueForKeyCF(key) {
     return arred2(((1-desconto)*(txImp ==  0 ? 1 : txImp)) * taxaMarkup * custoComCredICMS);
 }
 
-function icmsDaTabela(origem = p.state.ufOrig, destino = p.state.ufDest){
-    return trib.state.tabelaIcms[listUF.indexOf(origem)][listUF.indexOf(destino)];
+function icmsDaTabela(origem = param.ufOrig, destino = param.ufDest){
+    return trib.tabelaIcms[listUF.indexOf(origem)][listUF.indexOf(destino)];
 }
 
 function calcICMS(tipoItem, eImportado = false, subTrib = false, anexoIX = false){
-    if (p.state.zerarICMS) return 0;
+    if (param.zerarICMS) return 0;
     if (subTrib){
         console.log(`subtrib: ${subTrib}`)
         return 0};
     if (tipoItem == 'SV' || tipoItem == 'SW' || tipoItem == '') return 0;
 
-    if (eImportado && (p.state.ufOrig != p.state.ufDest)) {
+    if (eImportado && (param.ufOrig != param.ufDest)) {
         return 4/100;
     }else{
-        if (p.state.ufOrig != p.state.ufDest){
+        if (param.ufOrig != param.ufDest){
             return icmsDaTabela()
         }else {
             if (anexoIX){
                 return 7/100;
             }else{
-                if (p.state.tipoFatur.toUpperCase() == 'GOVERNO'){
+                if (param.tipoFatur.toUpperCase() == 'GOVERNO'){
                     return 10.5/100;
                 }else {
                     return icmsDaTabela();
