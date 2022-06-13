@@ -1620,6 +1620,7 @@ async function cronograma(){
 }
 
 async function copiaTabelaParaDI(){
+    log("Início copiaTabelaParaDI()")
     await atualizaArrayTabelas();
     return await Excel.run(async (context)=>{
         context.workbook.protection.unprotect(SECRET);
@@ -1689,6 +1690,7 @@ async function copiaTabelaParaDI(){
 }
 
 async function resumo(){
+    log("Início resumo()");
     await atualizaArrayTabelas();
     const colunaresumo = "D"
     return await Excel.run(async (context)=>{
@@ -1886,7 +1888,7 @@ function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
         return trib.csllHW + trib.irpjHW + trib.pis + trib.cofins + icms + difal;
     }else if (tipoItem == 'SW' || tipoItem == 'SV'){
         log(`total impostos = csllSW + irjpSW + pis + cofins + issFora * (!éGoiania) + issGyn * (éGoiania)`)
-        log(`total impostos = ${trib.csllSW} + ${trib.irpjSW} + ${trib.ste.pis} + ${trib.cofins} + ${trib.issOut * (!param.destGoiania)} + ${trib.issGYN * (param.destGoiania)}`)
+        log(`total impostos = ${trib.csllSW} + ${trib.irpjSW} + ${trib.pis} + ${trib.cofins} + ${trib.issOut * (!param.destGoiania)} + ${trib.issGYN * (param.destGoiania)}`)
         log(`total impostos = ${trib.csllSW + trib.irpjSW + trib.pis + trib.cofins + trib.issOut * (!param.destGoiania) + trib.issGYN * (param.destGoiania)}`);
         log(`Final função calculaImpostos`)
         return trib.csllSW + trib.irpjSW + trib.pis + trib.cofins + trib.issOut * (!param.destGoiania) + trib.issGYN * (param.destGoiania);
