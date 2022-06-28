@@ -2886,7 +2886,7 @@ async function contentTableResumo(coluna, linha){
     formula[11][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 12}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
 
     //SUBTOTAL CUSTOS DIRETOS (ORÇAMENTO DE EXECUÇÃO)
-    //formula[12][0] = ''
+    formula[12][0] = `=SUBTOTAL(9, ${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 2}:${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 11})`
     formula[12][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 13}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
 
     //SERVIÇOS DE TERCEIROS
@@ -2899,7 +2899,7 @@ async function contentTableResumo(coluna, linha){
 
 
     //MARGEM LÍQUIDA
-    formula[15][0] = `=${nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 14)} * $${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${(PRIMEIRA_LINHA + 1)}`
+    formula[15][0] = `=SUBTOTAL(9, ${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 13}:${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 15})`
     formula[15][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 16}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
 
     writeOnSheet(formula, id.despesas, RANGE_DOS_VALORES, 'formulas');
