@@ -99,6 +99,7 @@ Office.initialize = () => {
     document.getElementById('content-margem-input-sv-terc').onchange = loadFromMargemToSheet;
 
     document.getElementById("nav-button-fechamento").onclick = showFechamento;
+    document.getElementById("content-fechamento-btn-siecon").onclick = sieconButtonOnClick;
     document.getElementById("content-fechamento-btn-cronograma").onclick = toggleButtonCronograma;
     document.getElementById("content-fechamento-btn-fechamento").onclick = toggleButtonFechamento;
 
@@ -2378,4 +2379,718 @@ async function toggleButtonCronograma(){
 
 async function toggleButtonFechamento(){
   await copiaTabelaParaDI();
+}
+
+async function toggleButtonSiecon(){
+  var status = await getFromSheet(id.siecon, '', 'visibility');
+
+  if (status == 'Visible'){
+    ocultaPlanilhas(id.siecon);
+    return 0;
+  }
+
+  exibePlanilhas(id.siecon)
+}
+
+
+async function sieconButtonOnClick(){
+  await atualizaArrayTabelas();
+
+  const PRIMEIRA_LINHA_DESTINO = 3;
+  const COLUNA_VALORES_UNITARIOS_ORIGEM = 'AE'
+  const COLUNA_VALORES_UNITARIOS_DESTINO = 'J'
+  const LINHA_CABECALHO = 2;
+  const COLUNA_CABECALHO = 'B'; //SOMENTE COLUNA MAIS À ESQUERDA
+
+  var coluna_ini = colunas[0].ini;
+  var coluna_fin = colunas[0].fin;
+  var headKit = [];
+  var numLinhasValidas = tabelas[tabelas.length - 1].linha_fin - tabelas[0].linha_ini - 2 //array com o número de linhas válidas
+  
+  return await Excel.run(async (context)=>{
+      context.workbook.protection.unprotect(SECRET);
+      const precificacao = context.workbook.worksheets.getItem(id.precificacao); //planilha Precificação
+      const cronograma = context.workbook.worksheets.getItem(id.siecon);  //planilha CRONOGRAMA
+      cronograma.load("visibility");
+      await context.sync();
+
+      var linhaCronograma = cronograma.getRange("1" + ":500");
+      var arrayFormulaItem = [["", ""]];
+      var range = "";
+
+      //se a planilha já estiver criada, ao pressionar o botão ela será escondida
+      if (cronograma.visibility == Excel.SheetVisibility.visible){
+          cronograma.visibility = Excel.SheetVisibility.veryHidden;
+          context.workbook.protection.protect(SECRET)
+          return context.sync();
+      }
+
+      linhaCronograma.clear();
+      cronograma.visibility = Excel.SheetVisibility.visible;
+      await context.sync();
+
+
+      //seleciona as linhas de B até K (coluna_fin) de todas as linhas com conteúdo
+      var origem = precificacao.getRange(
+        coluna_ini + (tabelas[0].linha_ini + 2) + ":" +coluna_fin + (tabelas[tabelas.length-1].linha_fin));
+        
+      var offset = (tabelas[0].linha_ini + 2) - PRIMEIRA_LINHA_DESTINO; //linha original - linha destino
+
+      //copia para a planilha CRONOGRAMA, coluna B, linha PRIMEIRA_LINHA
+      cronograma.getRange("B"+ PRIMEIRA_LINHA_DESTINO).copyFrom(origem);
+
+      //copia os valores unitários da aba precificação (sem fórmulas, somente valores)
+
+      var valores_origem = await getFromSheet(id.precificacao,
+        COLUNA_VALORES_UNITARIOS_ORIGEM + (tabelas[0].linha_ini + 2) + ':' +  COLUNA_VALORES_UNITARIOS_ORIGEM + tabelas[tabelas.length - 1].linha_fin,
+        'values');
+
+      writeOnSheet(valores_origem,
+         id.siecon,
+         COLUNA_VALORES_UNITARIOS_DESTINO + (tabelas[0].linha_ini + 2 - offset) + ':' +  COLUNA_VALORES_UNITARIOS_DESTINO + (tabelas[tabelas.length - 1].linha_fin - offset),
+         'values')
+
+      await context.sync();
+
+
+      
+      //corrige as fórmulas dos cabeçalhos dos kits, se houver
+      // 
+      //verifica cabeçalhos de kits
+      for (i in tabelas){
+        for (j in tabelas[i].kit){
+            headKit.push(tabelas[i].kit[j]);
+        }
+      }
+
+    if (headKit.length > 0){
+
+      for (i in headKit){
+        //cabeçalho
+
+        range = "J" + (parseInt(headKit[i].linha - offset)) + ":" + "K" + (parseInt(headKit[i].linha - offset));
+        arrayFormulaItem =  [["", ""]];
+        writeOnSheet(arrayFormulaItem, id.siecon, range, 'formulas')
+
+      }
+       await context.sync();
+    }
+      
+              
+      //remove as linhas em branco
+      for (i in tabelas){
+         cronograma.getRange((tabelas[tabelas.length - i -1].linha_fin - offset) + ":" + (tabelas[tabelas.length - i - 1].linha_fin - offset + 3)).delete(Excel.DeleteShiftDirection.up);
+      }
+      await context.sync();
+
+
+      linhaCronograma = cronograma.getRange(COLUNA_CABECALHO + LINHA_CABECALHO + ':' + nextLetterInAlphabet(COLUNA_CABECALHO, 9) + LINHA_CABECALHO)
+      linhaCronograma.format.fill.color = "#FF561C";
+      linhaCronograma.format.borders.getItem('EdgeBottom').color = "#000000";
+      linhaCronograma.format.borders.getItem('EdgeTop').color = "#000000";
+      linhaCronograma.format.borders.getItem('EdgeRight').color = "#000000";
+      linhaCronograma.format.borders.getItem('EdgeLeft').color = "#000000";
+      linhaCronograma.format.borders.getItem('InsideVertical').color = "#000000";
+      linhaCronograma.format.font.color = "#FFFFFF";
+      linhaCronograma.format.font.bold = true;
+      linhaCronograma.format.font.size = 9;
+      linhaCronograma.format.rowHeight = 30;
+      linhaCronograma.format.autoIndent = true;
+
+      
+      cronograma.getRange("D:D").insert(Excel.InsertShiftDirection.right);
+      await context.sync();
+
+      const header = [[ 'ITEM', 'NATUREZA\nVENDA', 'NATUREZA\nCOMPRA', 'DESCRIÇÃO', 'FABRICANTE', 'MODELO', 'NCM', 'QTDE', 'UN', 'VALOR UNITÁRIO (R$)', 'VALOR TOTAL (R$)']] 
+      writeOnSheet(header, id.siecon, COLUNA_CABECALHO + LINHA_CABECALHO + ':' + nextLetterInAlphabet(COLUNA_CABECALHO, 10) + LINHA_CABECALHO, 'formulas')
+
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, -1) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, -1));
+      linhaCronograma.format.columnWidth = 7 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 0) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 0));
+      linhaCronograma.format.columnWidth = 7 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 1) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 2));
+      linhaCronograma.format.columnWidth = 7.5 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 3) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 3));
+      linhaCronograma.format.columnWidth = 45 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 4) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 5));
+      linhaCronograma.format.columnWidth = 15 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 6) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 6));
+      linhaCronograma.format.columnWidth = 10 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 7) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 8));
+      linhaCronograma.format.columnWidth = 7 * 6.54;
+      linhaCronograma = cronograma.getRange(nextLetterInAlphabet(COLUNA_CABECALHO, 9) + ":" + nextLetterInAlphabet(COLUNA_CABECALHO, 10));
+      linhaCronograma.format.columnWidth = 15 * 6.54;
+      
+      cronograma.activate();
+      context.workbook.protection.protect(SECRET)
+      await context.sync();
+      //log("ID: " + cronograma.name );
+
+  });
+
+}
+
+
+async function layoutTableResumo(sheet, coluna, linha){
+
+  return await Excel.run(async (context)=>{
+      const SHEET = sheet;
+      const ws = context.workbook.worksheets.getItem(SHEET);
+      const PRIMEIRA_LINHA = linha;
+      const PRIMEIRA_COLUNA = coluna;
+      const COLOR_BLACK = '#000000';
+      const COLOR_WHITE = '#FFFFFF';
+      const COLOR_DARK_GRAY = '#6F6F6E';
+      const COLOR_LIGHT_GRAY = '#D9D9D9';
+      const COLOR_DARK_ORANGE = '#FF561C';
+      const COLOR_LIGHT_ORANGE = '#F4B084';
+
+      const HEADER = [['RESUMO', 'VALOR', 'PERCENTUAL']]
+      const FIRST_COLUMN = [
+            ['VALOR DO FATURAMENTO'],
+            ['CUSTOS DE AQUISIÇÃO EM REAIS'],
+            ['CUSTOS DE IMPORTAÇÃO'],
+            ['CUSTOS DIRETOS DE MÃO DE OBRA PRÓPRIA'],
+            ['CUSTOS COM SUBCONTRATAÇÕES, LOCAÇÕES E DESPESAS DIVERSAS'],
+            ['CUSTOS COM LOGÍSTICA PARA EQUIPE DE ACOMPANHAMENTO'],
+            ['CUSTOS COM LOGÍSTICA PARA EQUIPE DE EXECUÇÃO'],
+            ['CUSTOS COM FRETES'],
+            ['COMISSÕES'],
+            ['IMPOSTOS TOTAIS'],
+            ['CRÉDITO ICMS'],
+            ['IMPOSTOS (MENOS CRÉDITO DE ICMS)'],
+            ['SUBTOTAL CUSTOS DIRETOS (ORÇAMENTO DE EXECUÇÃO)'],
+            ['SERVIÇOS DE TERCEIROS'],
+            ['TAXA ADMINISTRATIVA'],
+            ['MARGEM LÍQUIDA']
+      ];
+
+      var range = '';
+      range = PRIMEIRA_COLUNA + PRIMEIRA_LINHA + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, (HEADER[0].length - 1) ) + PRIMEIRA_LINHA;
+      writeOnSheet(HEADER, SHEET, range)
+
+      range = PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 1) + ':' + PRIMEIRA_COLUNA  + (PRIMEIRA_LINHA + 1 + FIRST_COLUMN.length - 1);
+      writeOnSheet(FIRST_COLUMN, SHEET, range)
+
+      //SEGUNDA COLUNA
+      //FORMAT CURRENCY
+      range = nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 1) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 1 + FIRST_COLUMN.length - 1)
+      var linhaSelecionada = ws.getRange(range);
+      
+      linhaSelecionada.style = "Currency";
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      
+      //TERCEIRA COLUNA FORMAT PERCENT
+      range = nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 1) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 1 + FIRST_COLUMN.length - 1)
+      linhaSelecionada = ws.getRange(range);
+      linhaSelecionada.style = "Percent";
+      linhaSelecionada.numberFormat = "0.00%";
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.horizontalAlignment = 'Center';
+      
+      //CABEÇALHO
+      //FUNDO PRETO, FONTE BRANCA, CENTRALIZADO, MARGEM INTERNA VERTICAL PONTILHADA
+      range = PRIMEIRA_COLUNA + PRIMEIRA_LINHA + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + PRIMEIRA_LINHA
+      linhaSelecionada = ws.getRange(range);
+      linhaSelecionada.format.fill.color = COLOR_BLACK;
+      linhaSelecionada.format.font.color = COLOR_WHITE;
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.horizontalAlignment = 'Center';
+      linhaSelecionada.format.borders.getItem('InsideVertical').style = 'Dash';
+      linhaSelecionada.format.borders.getItem('InsideVertical').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('InsideVertical').color = COLOR_BLACK;
+
+      
+      //linhas em cinza escuro, fonte branca, margem superior e inferior pretas, margem interna vertical branca
+      range = PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 1) + ',' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 1) + ',' +
+        PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 13) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 13) + ',' + 
+        PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 16) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 16);
+      
+      linhaSelecionada = ws.getRanges(range);
+      linhaSelecionada.format.fill.color = COLOR_DARK_GRAY;
+      linhaSelecionada.format.font.color = COLOR_WHITE;
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.borders.getItem('EdgeBottom').color = COLOR_BLACK;
+      linhaSelecionada.format.borders.getItem('EdgeTop').color = COLOR_BLACK;
+      linhaSelecionada.format.borders.getItem('EdgeBottom').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('EdgeTop').weight = "Hairline";
+      
+
+      //celulas laranja escuro, fonte branca, margem interna horizontal branca, 
+      range = PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 2) + ':' + PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 9) + ',' +
+        PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 12) + ',' + 
+        PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 14) + ':' + PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 15);
+    
+      linhaSelecionada = ws.getRanges(range);
+      linhaSelecionada.format.fill.color = COLOR_DARK_ORANGE;
+      linhaSelecionada.format.font.color = COLOR_WHITE;
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').style = 'Dash';
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').color = COLOR_BLACK;
+
+
+      //celulas laranja claro, fonte branca, margem bottom branca, 
+      range = PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 10) + ',' + PRIMEIRA_COLUNA + (PRIMEIRA_LINHA + 11);
+    
+      linhaSelecionada = ws.getRanges(range);
+      linhaSelecionada.format.fill.color = COLOR_LIGHT_ORANGE;
+      linhaSelecionada.format.font.color = COLOR_WHITE;
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.borders.getItem('EdgeBottom').style = 'Dash';
+      linhaSelecionada.format.borders.getItem('EdgeBottom').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('EdgeBottom').color = COLOR_BLACK;
+
+      //celulas cinza claro, fonte branca, margem interna branca, 
+      range = nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 2) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 12) + ',' +
+      nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 14) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 15);
+    
+      linhaSelecionada = ws.getRanges(range);
+      linhaSelecionada.format.fill.color = COLOR_LIGHT_GRAY;
+      linhaSelecionada.format.font.color = COLOR_BLACK;
+      linhaSelecionada.format.font.bold = true;
+      linhaSelecionada.format.font.size = 10;
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').style = 'Dash';
+      linhaSelecionada.format.borders.getItem('InsideVertical').style = 'Dash';
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('InsideVertical').weight = "Hairline";
+      linhaSelecionada.format.borders.getItem('InsideHorizontal').color = COLOR_WHITE;
+      linhaSelecionada.format.borders.getItem('InsideVertical').color = COLOR_WHITE;
+
+
+
+      //margem mais escura
+      range = (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 1) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 2) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 2) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 3) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 9) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 10) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 12) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 13) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 13) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 14) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 15) + ',' +
+              (PRIMEIRA_COLUNA) + (PRIMEIRA_LINHA + 16) + ':' + nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 16);
+    
+      linhaSelecionada = ws.getRanges(range);
+      linhaSelecionada.format.borders.getItem('EdgeTop').style = 'Continuous';
+      linhaSelecionada.format.borders.getItem('EdgeRight').style = 'Continuous';
+      linhaSelecionada.format.borders.getItem('EdgeLeft').style = 'Continuous';
+      linhaSelecionada.format.borders.getItem('EdgeBottom').style = 'Continuous';
+
+      linhaSelecionada.format.borders.getItem('EdgeTop').weight = 'Medium';
+      linhaSelecionada.format.borders.getItem('EdgeRight').weight = 'Medium';
+      linhaSelecionada.format.borders.getItem('EdgeLeft').weight = 'Medium';
+      linhaSelecionada.format.borders.getItem('EdgeBottom').weight = 'Medium';
+
+      linhaSelecionada.format.borders.getItem('EdgeTop').color = COLOR_BLACK;
+      linhaSelecionada.format.borders.getItem('EdgeRight').color = COLOR_BLACK;
+      linhaSelecionada.format.borders.getItem('EdgeLeft').color = COLOR_BLACK;
+      linhaSelecionada.format.borders.getItem('EdgeBottom').color = COLOR_BLACK;
+
+  });
+  
+
+}
+
+
+async function contentTableResumo(coluna, linha){
+  log("Início resumo()");
+  await atualizaArrayTabelas();
+
+  return await Excel.run(async (context)=>{
+    const SHEET = id.despesas;
+    const PRIMEIRA_LINHA = linha;
+    const PRIMEIRA_COLUNA = coluna;
+    const RANGE_DOS_VALORES = 'D3:E18';
+    const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
+    const ws = context.workbook.worksheets.getItem(SHEET);
+    var range = '';
+    var formula =Array.from(Array(16), () => new Array(2));
+    
+
+    // VALOR DO FATURAMENTO
+    //formula[0][0] = '';
+    formula[0][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 1}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`; 
+    // CUSTO DE AQUISIÇÃO EM REAIS
+    formula[1][0] = `=-subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin})- SUM(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 4}:${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 8})`;
+
+    formula[1][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 2}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`; 
+    //CUSTOS DE IMPORTAÇÃO
+    formula[2][0] = `=-(subtotal(9, Precificação!${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}) -subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}))`
+    
+    formula[2][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 3}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`;
+
+    //CUSTOS DE SERVIÇOS
+    if(id.servicos.length > 1){
+      // CUSTOS DIRETOS DE MÃO DE OBRA PRÓPRIA  (3)
+      for (i in id.servicos){
+          log(i)
+          let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+          servico.load("name");
+          await context.sync();
+
+          log(servico.name)
+
+          if (i == 1){
+              formula[3][0] = "=-('" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+          }
+          if (i > 1){
+              formula[3][0] = formula[3][0] + " + '" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+          }
+          if (i == id.servicos.length-1){
+              formula[3][0] = formula[3][0] + " )"
+
+          }
+      }
+      log(formula[3][0])
+
+
+      // CUSTOS COM SUBCONTRATACOES E DESPESAS DIVERSAS (4)
+      for (i in id.servicos){
+          log(i)
+          let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+          servico.load("name");
+          await context.sync();
+
+          log(servico.name)
+
+          if (i == 1){
+              formula[4][0] = "=-('" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+          }
+          if (i > 1){
+              formula[4][0] = formula[4][0] + " + '" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+          }
+          if (i == id.servicos.length-1){
+              formula[4][0] = formula[4][0] + " )"
+
+          }
+      }
+
+
+      // CUSTOS COM LOGÍSTICA PARA EQUIPE DE ACOMPANHAMENTO (5)
+      for (i in id.servicos){
+          log(i)
+          let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+          servico.load("name");
+          await context.sync();
+
+          log(servico.name)
+
+          if (i == 1){
+              formula[5][0] = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+          }
+          if (i > 1){
+              formula[5][0] = formula[5][0] + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+          }
+          if (i == id.servicos.length-1){
+              formula[5][0] = formula[5][0] + " )"
+
+          }
+      }
+
+
+      // CUSTOS COM LOGÍSTICA PARA EQUIPE DE EXECUÇÃO (6)
+      for (i in id.servicos){
+          log(i)
+          let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+          servico.load("name");
+          await context.sync();
+
+          log(servico.name)
+
+          if (i == 1){
+              formula[6][0] = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+          }
+          if (i > 1){
+              formula[6][0] = formula[6][0] + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+          }
+          if (i == id.servicos.length-1){
+              formula[6][0] = formula[6][0] + " )"
+          }
+      }
+
+
+      // CUSTOS COM FRETES (7)
+      for (i in id.servicos){
+          log(i)
+          let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+          servico.load("name");
+          await context.sync();
+
+          log(servico.name)
+
+          if (i == 1){
+              formula[7][0] = "=-('" + servico.name + "'" + "!SUBTOTAL_FRETES";
+          }
+          if (i > 1){
+              formula[7][0] = formula[7][0] + " + '" + servico.name + "'" + "!SUBTOTAL_FRETES";
+          }
+          if (i == id.servicos.length-1){
+              formula[7][0] = formula[7][0] + " )"
+          }
+      }
+      
+    }else{
+      formula[3][0] = "0";
+      formula[4][0] = "0";
+      formula[5][0] = "0";
+      formula[6][0] = "0";
+      formula[7][0] = "0";
+    }
+
+    formula[3][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 4}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+    formula[4][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 5}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+    formula[5][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 6}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+    formula[6][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 7}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+    formula[7][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 8}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    //COMISSOES
+    formula[8][0] = `=(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 2)}${PRIMEIRA_LINHA + 9}*$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1})`
+    formula[8][1] = `=-${param.comissaoDirGov + param.comissaoDirPriv + param.comissaoVP + param.comissaoGC + param.comissaoExec + param.comissaoPrev + param.comissaoParc}`;
+    
+    //IMPOSTOS TOTAIS (-)
+    formula[9][0] = ''
+    formula[9][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 10}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    //CRÉDITO ICMS
+    var creditoEmReais = 0;
+    var arrayCustos = precificacao.getRange(`${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+    var arrayCredICMS = precificacao.getRange(`${colunas[5].fin}${tabelas[0].linha_ini}:${colunas[5].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+    arrayCredICMS.load("values");
+    arrayCustos.load("values");
+    await context.sync();
+
+
+    ////remove os valores dos cabeçalhos dos kits
+    var offset = tabelas[0].linha_ini
+    for (i in tabelas){
+        for (j in tabelas[i].kit){
+            arrayCustos.values[tabelas[i].kit[j].linha - offset] = ['']
+        }
+    }
+
+    ////varre os arrays multiplicando os valores
+    for (i in arrayCustos.values){
+        if (arred4(arrayCustos.values[i] * arrayCredICMS.values[i]) >= 0){
+            creditoEmReais = creditoEmReais + arred4(arrayCustos.values[i] * arrayCredICMS.values[i]);
+        }
+    }
+    formula[10][0] = `${arred4(creditoEmReais)}`;
+    formula[10][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 11}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    //IMPOSTOS (MENOS CRÉDITO ICMS)
+    formula[11][0] = `=${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 10)} + ${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1) + (PRIMEIRA_LINHA + 11)}`
+    formula[11][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 12}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    //SUBTOTAL CUSTOS DIRETOS (ORÇAMENTO DE EXECUÇÃO)
+    //formula[12][0] = ''
+    formula[12][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 13}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    //SERVIÇOS DE TERCEIROS
+    formula[13][0] = `=${nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 14)} * $${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${(PRIMEIRA_LINHA + 1)}`
+    formula[13][1] = `=-${param.svTerc}`
+
+    //TAXA ADMINISTRATIVA
+    formula[14][0] = `=${nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 15)} * $${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${(PRIMEIRA_LINHA + 1)}`
+    formula[14][1] = `=-${param.txAdm}`
+
+
+    //MARGEM LÍQUIDA
+    formula[15][0] = `=${nextLetterInAlphabet(PRIMEIRA_COLUNA, 2) + (PRIMEIRA_LINHA + 14)} * $${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${(PRIMEIRA_LINHA + 1)}`
+    formula[15][1] = `=IFERROR(${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}${PRIMEIRA_LINHA + 16}/$${nextLetterInAlphabet(PRIMEIRA_COLUNA, 1)}$${PRIMEIRA_LINHA + 1},0)`
+
+    writeOnSheet(formula, id.despesas, RANGE_DOS_VALORES, 'formulas');
+    return context.sync()
+
+  });
+
+}
+
+
+async function resumo(){
+  log("Início resumo()");
+  await atualizaArrayTabelas();
+  const colunaresumo = "D"
+  return await Excel.run(async (context)=>{
+      const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
+      const despesas = context.workbook.worksheets.getItem(id.despesas);
+      var range = "";
+
+      // VALOR DO FATURAMENTO
+      // CUSTOS DE AQUISIÇÃO EM REAIS
+      despesas.getRange("D4").formulas = `=-subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}) - SUM(D6:D10)`;
+      // CUSTOS DE IMPORTAÇÃO
+      despesas.getRange("D5").formulas = `=-(subtotal(9, Precificação!${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}) - subtotal(9, Precificação!${colunas[6].fin}${tabelas[0].linha_ini}:${colunas[6].fin}${tabelas[tabelas.length - 1].linha_fin}))`;
+
+      if(id.servicos.length > 1){
+          // CUSTOS DIRETOS DE MÃO DE OBRA PRÓPRIA  
+          for (i in id.servicos){
+              log(i)
+              let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+              servico.load("name");
+              await context.sync();
+
+              log(servico.name)
+
+              if (i == 1){
+                  range = "=-('" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+                  //log(`range1: ${range}`)
+              }
+              if (i > 1){
+                  range = range + " + '" + servico.name + "'" + "!SUBTOTAL_MAO_DE_OBRA_PROPRIA";
+                  //log(`range1+: ${range}`)
+              }
+              if (i == id.servicos.length-1){
+                  range = range + " )"
+
+              }
+          }
+          log(range)
+          despesas.getRange("D6").formulas = range;
+
+          // CUSTOS COM SUBCONTRATAÇÕES, LOCAÇÕES E DESPESAS DIVERSAS
+          for (i in id.servicos){
+              log(i)
+              let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+              servico.load("name");
+              await context.sync();
+
+              log(servico.name)
+
+              if (i == 1){
+                  range = "=-('" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+                  //log(`range1: ${range}`)
+              }
+              if (i > 1){
+                  range = range + " + '" + servico.name + "'" + "!SUBTOTAL_SUBCONTRATACOES_E_DESPESAS_DIVERSAS";
+                  //log(`range1+: ${range}`)
+              }
+              if (i == id.servicos.length-1){
+                  range = range + " )"
+
+              }
+          }
+          despesas.getRange("D7").formulas = range;
+
+          // CUSTOS COM LOGÍSTICA PARA EQUIPE DE ACOMPANHAMENTO 
+          for (i in id.servicos){
+              log(i)
+              let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+              servico.load("name");
+              await context.sync();
+
+              log(servico.name)
+
+              if (i == 1){
+                  range = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+                  //log(`range1: ${range}`)
+              }
+              if (i > 1){
+                  range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_ACOMPANHAMENTO";
+                  //log(`range1+: ${range}`)
+              }
+              if (i == id.servicos.length-1){
+                  range = range + " )"
+
+              }
+          }
+          despesas.getRange("D8").formulas = range;
+
+          // CUSTOS COM LOGÍSTICA PARA EQUIPE DE EXECUÇÃO 
+          for (i in id.servicos){
+              log(i)
+              let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+              servico.load("name");
+              await context.sync();
+
+              log(servico.name)
+
+              if (i == 1){
+                  range = "=-('" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+                  //log(`range1: ${range}`)
+              }
+              if (i > 1){
+                  range = range + " + '" + servico.name + "'" + "!SUBTOTAL_LOGISTICA_COM_EQUIPE_DE_CAMPO";
+                  //log(`range1+: ${range}`)
+              }
+              if (i == id.servicos.length-1){
+                  range = range + " )"
+
+              }
+          }
+          despesas.getRange("D9").formulas = range;
+
+          // CUSTOS COM FRETES 
+          for (i in id.servicos){
+              log(i)
+              let servico = context.workbook.worksheets.getItem(id.servicos[i]);
+              servico.load("name");
+              await context.sync();
+
+              log(servico.name)
+
+              if (i == 1){
+                  range = "=-('" + servico.name + "'" + "!SUBTOTAL_FRETES";
+                  //log(`range1: ${range}`)
+              }
+              if (i > 1){
+                  range = range + " + '" + servico.name + "'" + "!SUBTOTAL_FRETES";
+                  //log(`range1+: ${range}`)
+              }
+              if (i == id.servicos.length-1){
+                  range = range + " )"
+
+              }
+          }
+          despesas.getRange("D10").formulas = range;
+      }else{
+          range = 0
+          despesas.getRange("D6").formulas = range;
+          despesas.getRange("D7").formulas = range;
+          despesas.getRange("D8").formulas = range;
+          despesas.getRange("D9").formulas = range;
+          despesas.getRange("D10").formulas = range;
+      }
+      // COMISSÕES
+      despesas.getRange("E11").formulas = `=-${p.state.comCom + p.state.comDir + p.state.comPar + p.state.comPre}`;
+      // IMPOSTOS
+      //despesas.getRange("D12").formulas = ``;
+      // SERVIÇOS DE TERCEIROS
+      despesas.getRange("E13").formulas = `=-${p.state.svTerc}`;
+      // TAXA ADMINISTRATIVA
+      despesas.getRange("E14").formulas = `=-${p.state.txAdm}`;
+      
+      // CRÉDITO ICMS
+      var creditoEmReais = 0;
+      var arrayCustos = precificacao.getRange(`${colunas[7].fin}${tabelas[0].linha_ini}:${colunas[7].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+      var arrayCredICMS = precificacao.getRange(`${colunas[5].fin}${tabelas[0].linha_ini}:${colunas[5].fin}${tabelas[tabelas.length - 1].linha_fin}`);
+      arrayCredICMS.load("values");
+      arrayCustos.load("values");
+      await context.sync();
+
+
+      ////remove os valores dos cabeçalhos dos kits
+      var offset = tabelas[0].linha_ini
+      for (i in tabelas){
+          for (j in tabelas[i].kit){
+              arrayCustos.values[tabelas[i].kit[j].linha - offset] = ['']
+          }
+      }
+  
+      ////varre os arrays multiplicando os valores
+      for (i in arrayCustos.values){
+          if (arred4(arrayCustos.values[i] * arrayCredICMS.values[i]) >= 0){
+              creditoEmReais = creditoEmReais + arred4(arrayCustos.values[i] * arrayCredICMS.values[i]);
+          }
+      }
+      despesas.getRange("D15").formulas = `${arred4(creditoEmReais)}`;
+
+      // MARGEM LÍQUIDA
+      despesas.getRange("D16").formulas = `=D3 + SUM(D4:D14) + D15`;
+
+  });
+
 }

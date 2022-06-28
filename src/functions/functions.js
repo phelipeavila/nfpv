@@ -129,27 +129,20 @@ function icmsDaTabela(origem = param.ufOrig, destino = param.ufDest){
 
 function calcICMS(tipoItem, eImportado = false, subTrib = false, anexoIX = false){
     if (param.zerarICMS) return 0;
-    if (subTrib){
-        console.log(`subtrib: ${subTrib}`)
-        return 0};
+    if (subTrib) return 0;
+    if (param.tipoFatur == 'Direto') return 0;
+
     if (tipoItem == 'SV' || tipoItem == 'SW' || tipoItem == '') return 0;
 
-    if (eImportado && (param.ufOrig != param.ufDest)) {
+    if (param.ufOrig == 'GO' && param.ufDest == 'GO'){
+        if (anexoIX) return 7/100;
+        if (param.tipoFatur == 'Governo') return 10.5/100;
+
+        return icmsDaTabela();
+    }else if (eImportado && (param.ufOrig != param.ufDest)){
         return 4/100;
     }else{
-        if (param.ufOrig != param.ufDest){
-            return icmsDaTabela()
-        }else {
-            if (anexoIX){
-                return 7/100;
-            }else{
-                if (param.tipoFatur.toUpperCase() == 'GOVERNO'){
-                    return 10.5/100;
-                }else {
-                    return icmsDaTabela();
-                }
-            }
-        }
+        return icmsDaTabela();
     }
 }
 

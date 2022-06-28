@@ -142,7 +142,7 @@
                 "content-margem-check-politica-automatica": "w",
 
                 "nav-fechamento": true,
-                "content-fechamento-btn-siecon": "r",
+                "content-fechamento-btn-siecon": "w",
                 "content-fechamento-btn-cronograma": true,
                 "content-fechamento-btn-fechamento": true,
 

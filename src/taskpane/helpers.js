@@ -1623,8 +1623,13 @@ async function copiaTabelaParaDI(){
     log("Início copiaTabelaParaDI()")
     await atualizaArrayTabelas();
     return await Excel.run(async (context)=>{
+        const COLOR_BLACK = '#000000' 
+        const COLOR_WHITE = '#FFFFFF';
+        const CELULA_SOMA_IMPOSTOS = 'D12'
         context.workbook.protection.unprotect(SECRET);
         const primeiraLinha = 21;
+        const LINHA_CABECALHO = 20;
+        const RANGE_CABECALHO = "B20:G20";
         const precificacao = context.workbook.worksheets.getItem(id.precificacao); 
         const despesas = context.workbook.worksheets.getItem(id.despesas);
         despesas.load("visibility");
@@ -1648,6 +1653,14 @@ async function copiaTabelaParaDI(){
         context.workbook.protection.protect(SECRET);
 
         await context.sync()
+
+        despesas.getRange(RANGE_CABECALHO).format.fill.color = COLOR_BLACK;
+        despesas.getRange(RANGE_CABECALHO).format.font.color = COLOR_WHITE;
+        despesas.getRange(RANGE_CABECALHO).format.horizontalAlignment = 'Center';
+        despesas.getRange(RANGE_CABECALHO).format.font.bold = true;
+        let header = [['ITEM', 'DESCRIÇÃO', 'VALOR TOTAL', 'TIPO', 'IMPOSTOS (%)', 'IMPOSTOS (R$)']];
+        writeOnSheet(header, id.despesas, RANGE_CABECALHO, 'values');
+        
 
         tabelaOrigem = tabelaOrigem.values;
 
@@ -1677,11 +1690,15 @@ async function copiaTabelaParaDI(){
 
         //tabela resumo
 
+        
+        //await resumo()
+        await layoutTableResumo(id.despesas, 'C', 2)
+        await contentTableResumo('C', 2)
+        
         //soma de impostos
-        despesas.getRange("D12").formulas = `=-SUM(G${primeiraLinha}:G${primeiraLinha + cabecalhos.length - 1})`;
+        despesas.getRange(CELULA_SOMA_IMPOSTOS).formulas = `=-SUM(G${primeiraLinha}:G${primeiraLinha + cabecalhos.length - 1})`;
         await context.sync();
 
-        await resumo()
         despesas.activate();
         await context.sync();
         return cabecalhos;
@@ -1879,6 +1896,9 @@ function calculaImpostos(tipoItem, subTrib = false, anexoIX = false){
     var difal = (param.ufOrig == param.ufDest ? 0: (icmsDaTabela(param.ufDest, param.ufDest) - icms) * !subTrib);
 
     //log(`icms: ${icms} -- difal: ${difal}`)
+    if (param.tipoFatur = "Direto"){
+        return trib.fatDireto;
+    }
 
     if (tipoItem == 'HW' || tipoItem == 'MAT'){
         log(`total impostos = csllHW + irpjHW + pis + cofins + icms + difal`);
