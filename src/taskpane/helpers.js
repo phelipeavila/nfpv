@@ -2528,7 +2528,7 @@ data_cambio.value = JSDateToStrDate(param.dataCambio);
 data_cambio.max = ontemStringHTML();
 input_usd.value = param.dolarPTAX;
 input_eur.value = param.euroPTAX;
-select_tipo_faturamento = param.tipoFatur;
+select_tipo_faturamento.value = param.tipoFatur;
 check_incentivo_icms.checked = param.zerarICMS;
 select_destino_goiania.checked = param.destGoiania;
 }
